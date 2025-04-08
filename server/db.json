@@ -1,0 +1,20 @@
+{
+  "users": [
+    { "id": 1, "username": "admin", "email": "admin@steamlite.com", "passwordHash": "hashedpassword1", "role": "admin" },
+    { "id": 2, "username": "dev1", "email": "dev@steamlite.com", "passwordHash": "hashedpassword2", "role": "developer" },
+    { "id": 3, "username": "user1", "email": "user@steamlite.com", "passwordHash": "hashedpassword3", "role": "user" }
+  ],
+  "games": [
+    { "id": 1, "title": "Cyber Adventure", "price": 29.99, "developerId": 2, "categoryId": 1, "description": "An epic adventure" }
+  ],
+  "categories": [
+    { "id": 1, "name": "Action" },
+    { "id": 2, "name": "RPG" }
+  ],
+  "reviews": [
+    { "id": 1, "userId": 3, "gameId": 1, "rating": 5, "comment": "Awesome game!" }
+  ],
+  "purchases": [
+    { "id": 1, "userId": 3, "gameId": 1, "purchaseDate": "2025-04-01" }
+  ]
+}
