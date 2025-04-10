@@ -10,6 +10,7 @@ import GameDetail from './pages/GameDetail';
 import AddGame from './pages/AddGame';
 import ManageUsers from './pages/ManageUsers';
 import EditGame from './pages/EditGame';
+import DeleteCard from './pages/DeleteCard';
 
 
 function App() {
@@ -27,6 +28,7 @@ function App() {
                 <Route path="/games/:id" element={<GameDetail />} />
                 <Route path="/games/:id/edit" element={<EditGame />} />
                 <Route path="/add-game" element={user ? <AddGame /> : <Navigate to="/dashboard" />} />
+                <Route path="/delete-game/:id" element={user ? <DeleteCard /> : <Navigate to="/dashboard" />} />
                 <Route path="/manage-users" element={user ? <ManageUsers /> : <Navigate to="/dashboard" />} />
             </Routes>
         </BrowserRouter>

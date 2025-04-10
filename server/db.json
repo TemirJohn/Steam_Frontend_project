@@ -20,6 +20,13 @@
       "email": "aslan@kz",
       "password": "$2b$10$ZFk6V4vdXzggOdT6aaGWDeWGZQNkrERGaOZeoiYaqAiz7mPe0TE/.",
       "role": "user"
+    },
+    {
+      "id": "bddf",
+      "username": "Beka",
+      "email": "Beka@kz",
+      "password": "$2b$10$fzeBUPjdp4w.fncyvzZVjuYmY/gBkE/wt4BzfKgTOFQ53IpFTZAcy",
+      "role": "user"
     }
   ],
   "games": [
@@ -54,14 +61,6 @@
       "developerId": 4,
       "categoryId": 2,
       "description": "Slay dragons and save the kingdom"
-    },
-    {
-      "id": "8e53",
-      "title": "CyberPank 2077",
-      "price": 2000,
-      "description": "Game about world ",
-      "categoryId": 1,
-      "developerId": "b0ce"
     }
   ],
   "categories": [
@@ -106,6 +105,13 @@
       "gameId": 1,
       "rating": 3,
       "comment": "Shiit"
+    },
+    {
+      "id": "ca71",
+      "userId": "b0ce",
+      "gameId": null,
+      "rating": 5,
+      "comment": "bEST GAME"
     }
   ],
   "purchases": [
@@ -142,6 +148,12 @@
     {
       "id": "d57c",
       "userId": "e80c",
+      "gameId": 1,
+      "purchaseDate": "2025-04-10"
+    },
+    {
+      "id": "c68b",
+      "userId": "bddf",
       "gameId": 1,
       "purchaseDate": "2025-04-10"
     }

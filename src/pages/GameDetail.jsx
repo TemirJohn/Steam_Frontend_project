@@ -63,11 +63,15 @@ function GameDetail() {
             <p>${game.price}</p>
             <p>{game.description}</p>
             {isEditor && (
-                <Link to={`/games/${id}/edit`}>
-                    <button style={{ color:'red' }} className="btn btn-yellow">Edit Game</button>
-                </Link>
+                <>
+                    <Link to={`/games/${id}/edit`}>
+                        <button className="btn btn-blue">Edit Game</button>
+                    </Link>
+                    <Link to={`/delete-game/${id}`}>
+                        <button className="btn btn-red">Delete Game</button>
+                    </Link>
+                </>
             )}
-
             {user && user.role === 'user' && (
                 <button
                     onClick={handlePurchase}
