@@ -9,6 +9,8 @@ import Games from './pages/Games';
 import GameDetail from './pages/GameDetail';
 import AddGame from './pages/AddGame';
 import ManageUsers from './pages/ManageUsers';
+import EditGame from './pages/EditGame';
+
 
 function App() {
     const user = useSelector((state) => state.auth.user);
@@ -23,6 +25,7 @@ function App() {
                 <Route path="/dashboard" element={user ? <Dashboard /> : <Navigate to="/login" />} />
                 <Route path="/games" element={<Games />} />
                 <Route path="/games/:id" element={<GameDetail />} />
+                <Route path="/games/:id/edit" element={<EditGame />} />
                 <Route path="/add-game" element={user ? <AddGame /> : <Navigate to="/dashboard" />} />
                 <Route path="/manage-users" element={user ? <ManageUsers /> : <Navigate to="/dashboard" />} />
             </Routes>

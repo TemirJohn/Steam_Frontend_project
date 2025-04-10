@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { Link } from 'react-router-dom';
 import ReviewForm from '../components/ReviewForm';
 
 function GameDetail() {
@@ -44,11 +45,15 @@ function GameDetail() {
         }
     }
 
+    if (!game) return <div>Loading...</div>;
+
     const handleReviewAdded = () => {
         fetch(`http://localhost:3001/reviews?gameId=${id}`)
             .then((res) => res.json())
             .then((data) => setReviews(data));
     };
+
+    const isEditor = user && (user.role === 'admin' || user.role === 'developer');
 
     if (!game) return <div>Loading...</div>;
 
@@ -57,6 +62,12 @@ function GameDetail() {
             <h1>{game.title}</h1>
             <p>${game.price}</p>
             <p>{game.description}</p>
+            {isEditor && (
+                <Link to={`/games/${id}/edit`}>
+                    <button style={{ color:'red' }} className="btn btn-yellow">Edit Game</button>
+                </Link>
+            )}
+
             {user && user.role === 'user' && (
                 <button
                     onClick={handlePurchase}

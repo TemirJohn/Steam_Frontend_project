@@ -11,9 +11,12 @@ function Navbar() {
             <Link to="/">Home</Link>
             {user ? (
                 <>
-                    <Link to="/dashboard">Dashboard</Link>
+                    {(user.role === 'admin' || user.role === 'developer') && (
+                        <Link to="/dashboard">Dashboard</Link>
+                    )}
                     <Link to="/games">Games</Link>
                     <button onClick={() => dispatch(logout())} className="btn btn-red">Logout</button>
+                    <span >👋 {user.username}</span>
                 </>
             ) : (
                 <>

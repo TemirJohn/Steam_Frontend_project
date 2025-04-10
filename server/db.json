@@ -26,7 +26,7 @@
     {
       "id": "1",
       "title": "Cyber Adventure",
-      "price": 29.99,
+      "price": 39.99,
       "developerId": 2,
       "categoryId": 1,
       "description": "An epic adventure"
@@ -135,6 +135,12 @@
     },
     {
       "id": "7afb",
+      "userId": "e80c",
+      "gameId": 1,
+      "purchaseDate": "2025-04-10"
+    },
+    {
+      "id": "d57c",
       "userId": "e80c",
       "gameId": 1,
       "purchaseDate": "2025-04-10"
