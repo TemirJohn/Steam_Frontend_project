@@ -38,15 +38,15 @@ function ManageUsers() {
     }
 
     return (
-        <div className="container mx-auto p-4">
-            <h1 className="text-2xl mb-4">Manage Users (Admins Only)</h1>
+        <div className="container">
+            <h1>Manage Users (Admins Only)</h1>
             <ul>
                 {users.map((u) => (
-                    <li key={u.id} className="flex justify-between items-center border-b py-2">
+                    <li key={u.id}>
                         <span>{u.username} - {u.role} - {u.email}</span>
                         <button
                             onClick={() => handleDelete(u.id)}
-                            className="bg-red-500 text-white px-2 py-1 rounded"
+                            className="btn btn-red"
                         >
                             Delete
                         </button>

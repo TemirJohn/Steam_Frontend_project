@@ -53,27 +53,27 @@ function GameDetail() {
     if (!game) return <div>Loading...</div>;
 
     return (
-        <div className="container mx-auto p-4">
-            <h1 className="text-2xl mb-4">{game.title}</h1>
+        <div className="container">
+            <h1>{game.title}</h1>
             <p>${game.price}</p>
             <p>{game.description}</p>
             {user && user.role === 'user' && (
                 <button
                     onClick={handlePurchase}
-                    className="bg-green-500 text-white px-4 py-2 rounded mt-2"
+                    className="btn btn-green"
                 >
                     Buy Now
                 </button>
             )}
-            <h2 className="text-xl mt-4">Reviews</h2>
+            <h2>Reviews</h2>
             <ul>
                 {reviews.map((review) => (
-                    <li key={review.id} className="border-b py-2">
+                    <li key={review.id}>
                         Rating: {review.rating}/5 - {review.comment}
                     </li>
                 ))}
             </ul>
-            {user && user.role === 'user' && (
+            {user && (
                 <ReviewForm gameId={Number(id)} onReviewAdded={handleReviewAdded} />
             )}
         </div>

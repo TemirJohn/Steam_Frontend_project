@@ -29,27 +29,25 @@ function ReviewForm({ gameId, onReviewAdded }) {
     }
 
     return (
-        <form onSubmit={handleSubmit} className="mt-4">
-            <div className="mb-2">
-                <label>Rating (1-5):</label>
+        <form onSubmit={handleSubmit}>
+            <label>
+                Rating (1-5):
                 <input
                     type="number"
                     min="1"
                     max="5"
                     value={rating}
                     onChange={(e) => setRating(Number(e.target.value))}
-                    className="border p-1 ml-2"
                 />
-            </div>
-            <div className="mb-2">
-                <label>Comment:</label>
+            </label>
+            <label>
+                Comment:
                 <textarea
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
-                    className="border p-1 w-full"
                 />
-            </div>
-            <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded">Submit Review</button>
+            </label>
+            <button type="submit" className="btn btn-blue">Submit Review</button>
         </form>
     );
 }
