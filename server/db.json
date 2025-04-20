@@ -27,6 +27,13 @@
       "email": "Beka@kz",
       "password": "$2b$10$fzeBUPjdp4w.fncyvzZVjuYmY/gBkE/wt4BzfKgTOFQ53IpFTZAcy",
       "role": "user"
+    },
+    {
+      "id": "bbab",
+      "username": "azicussdu",
+      "email": "azicussdu@gmail.com",
+      "password": "$2b$10$zTdQJ.BFm5Rm10gdAADUpehqPEEP/VixRub6x4yr/r2Pl/6mGIqRG",
+      "role": "admin"
     }
   ],
   "games": [
@@ -112,6 +119,13 @@
       "gameId": null,
       "rating": 5,
       "comment": "bEST GAME"
+    },
+    {
+      "id": "38d3",
+      "userId": "bbab",
+      "gameId": 3,
+      "rating": 4,
+      "comment": "Perfect!!!"
     }
   ],
   "purchases": [
@@ -155,6 +169,12 @@
       "id": "c68b",
       "userId": "bddf",
       "gameId": 1,
+      "purchaseDate": "2025-04-10"
+    },
+    {
+      "id": "4486",
+      "userId": "bbab",
+      "gameId": 3,
       "purchaseDate": "2025-04-10"
     }
   ]

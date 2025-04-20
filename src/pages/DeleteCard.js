@@ -24,7 +24,6 @@ function DeleteCard() {
                 return res.text();
             })
             .then((text) => {
-                console.log('Raw game response:', text);
                 const data = JSON.parse(text);
                 if (user.role === 'developer' && data.developerId !== user.id) {
                     alert('You can only delete your own games.');

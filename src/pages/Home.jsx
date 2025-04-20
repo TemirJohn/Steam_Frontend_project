@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { axios } from '../utils/axios';
 import GameCard from '../components/GameCard';
 
 function Home() {
@@ -9,17 +10,27 @@ function Home() {
     const [searchParams, setSearchParams] = useSearchParams();
     const categoryFilter = searchParams.get('category') || 'all';
 
-    useEffect(() => {
-        let url = 'http://localhost:3001/games';
-        if (categoryFilter !== 'all') {
-            url += `?categoryId=${categoryFilter}`;
-        }
+    // useEffect(() => {
+    //     let url = 'http://localhost:3001/games';
+    //     if (categoryFilter !== 'all') {
+    //         url += `?categoryId=${categoryFilter}`;
+    //     }
+    //
+    //     fetch(url)
+    //         .then((res) => res.json())
+    //         .then((data) => setGames(data))
+    //         .catch((error) => console.error('Error fetching games:', error));
+    // }, [categoryFilter]);
 
-        fetch(url)
-            .then((res) => res.json())
-            .then((data) => setGames(data))
-            .catch((error) => console.error('Error fetching games:', error));
-    }, [categoryFilter]);
+    useEffect(() => {
+        if (user) {
+            axios
+                .get(`http://localhost:8080/library`, {
+                    headers: { "User-ID": user.id },
+                })
+                .then((res) => setOwnedGames(res.data));
+        }
+    }, [user]);
 
     return (
         <div className="container">

@@ -29,7 +29,27 @@ function EditGame() {
                 setPrice(data.price);
                 setDescription(data.description);
             });
-    }, [id]);
+
+        fetch(`http://localhost:3001/games/${id}`)
+            .then((res) => {
+                if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
+                return res.text();
+            })
+            .then((text) => {
+                console.log('Raw game response:', text);
+                const data = JSON.parse(text);
+                if (user.role === 'developer' && data.developerId !== user.id) {
+                    alert('You can only edit your own games.');
+                    navigate('/dashboard');
+                } else {
+                    setGame(data);
+                }
+            })
+            .catch((error) => console.error('Error fetching game:', error));
+
+    }, [id, user, navigate]);
+
+
 
     const handleSave = async (e) => {
         e.preventDefault();

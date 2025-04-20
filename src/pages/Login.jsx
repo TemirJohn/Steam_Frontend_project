@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { login } from '../redux/authReducer';
-import bcrypt from 'bcryptjs';
+import axios from '../utils/axios';
 
 function Login() {
     const dispatch = useDispatch();
@@ -13,38 +13,24 @@ function Login() {
     async function handleLogin(e) {
         e.preventDefault();
         try {
-            const response = await fetch(`http://localhost:3001/users?email=${email}`);
-            const users = await response.json();
-
-            if (users.length === 0) {
-                alert('User not found');
-                return;
-            }
-
-            const user = users[0];
-
-            const isPasswordValid = await bcrypt.compare(password, user.password);
-
-            if (isPasswordValid) {
-                dispatch(login(user));
-                navigate('/dashboard');
-             } else {
-                alert('Invalid password');
-            }
+            const response = await axios.post('/login', { email, password });
+            dispatch(login(response.data));
+            navigate('/dashboard');
         } catch (error) {
             console.error('Login error:', error);
-            alert('Login failed');
+            alert(error.response?.data?.error || 'Login failed');
         }
     }
 
     return (
-        <div className="container">
-            <form onSubmit={handleLogin}>
+        <div className="container mx-auto p-4">
+            <form onSubmit={handleLogin} className="max-w-md mx-auto space-y-4">
                 <input
                     type="email"
                     placeholder="Email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    className="border p-2 rounded w-full"
                     required
                 />
                 <input
@@ -52,9 +38,12 @@ function Login() {
                     placeholder="Password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    className="border p-2 rounded w-full"
                     required
                 />
-                <button type="submit" className="btn btn-blue">Login</button>
+                <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded w-full">
+                    Login
+                </button>
             </form>
         </div>
     );
