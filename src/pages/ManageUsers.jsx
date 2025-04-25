@@ -18,7 +18,7 @@ function ManageUsers() {
     }, [user, navigate, dispatch]);
 
     useEffect(() => {
-        fetch('http://localhost:3001/users')
+        fetch('http://localhost:8080/users')
             .then((res) => res.json())
             .then((data) => setUsers(data))
             .catch((error) => console.error('Error fetching users:', error));
@@ -26,7 +26,7 @@ function ManageUsers() {
 
     async function handleDelete(id) {
         try {
-            const response = await fetch(`http://localhost:3001/users/${id}`, {
+            const response = await fetch(`http://localhost:8080/users/${id}`, {
                 method: 'DELETE',
             });
             if (response.ok) {

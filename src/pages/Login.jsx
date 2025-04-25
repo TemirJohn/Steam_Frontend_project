@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { login } from '../redux/authReducer';
-import axios from '../utils/axios';
+import axios from 'axios';
 
 function Login() {
     const dispatch = useDispatch();
@@ -14,7 +14,8 @@ function Login() {
         e.preventDefault();
         try {
             const response = await axios.post('/login', { email, password });
-            dispatch(login(response.data));
+            localStorage.setItem('token', response.data.token);
+            dispatch(login(response.data.user));
             navigate('/dashboard');
         } catch (error) {
             console.error('Login error:', error);

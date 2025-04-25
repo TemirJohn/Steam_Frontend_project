@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { axios } from '../utils/axios';
+import axios from 'axios';
 import GameCard from '../components/GameCard';
 
 function Home() {
     const user = useSelector((state) => state.auth.user);
     const [games, setGames] = useState([]);
+    const [ownedGames, setOwnedGames] = useState([]);
     const [searchParams, setSearchParams] = useSearchParams();
     const categoryFilter = searchParams.get('category') || 'all';
 
@@ -25,7 +26,7 @@ function Home() {
     useEffect(() => {
         if (user) {
             axios
-                .get(`http://localhost:8080/library`, {
+                .get(`/games`, {
                     headers: { "User-ID": user.id },
                 })
                 .then((res) => setOwnedGames(res.data));

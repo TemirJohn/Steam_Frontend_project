@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import axios from '../utils/axios'; // Ensure axios is configured (see below)
+import axios from 'axios';
 
 function Library() {
     const [ownedGames, setOwnedGames] = useState([]);
@@ -9,16 +9,16 @@ function Library() {
     useEffect(() => {
         if (user) {
             axios
-                .get('http://localhost:8080/library', {
-                    headers: { 'User-ID': user.id },
-                })
+                .get('/library')
                 .then((res) => setOwnedGames(res.data))
-                .catch((err) => {
-                    console.error('Error fetching library:', err);
-                    alert('Failed to load library');
-                });
+                .catch((err) => console.error('Error fetching library:', err));
         }
     }, [user]);
+
+    if (!user) {
+        return <div>Please log in to view your library.</div>;
+    }
+
 
     return (
         <div className="container mx-auto p-4">

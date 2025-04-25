@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
+import axios from 'axios';
 
 function ReviewForm({ gameId, onReviewAdded }) {
     const [rating, setRating] = useState(5);
@@ -13,18 +14,13 @@ function ReviewForm({ gameId, onReviewAdded }) {
         const review = { userId: user.id, gameId, rating, comment };
 
         try {
-            const response = await fetch('http://localhost:3001/reviews', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(review),
-            });
-            if (response.ok) {
-                onReviewAdded();
-                setRating(5);
-                setComment('');
-            }
+            await axios.post('/reviews', review);
+            onReviewAdded();
+            setRating(5);
+            setComment('');
         } catch (error) {
             console.error('Error submitting review:', error);
+            alert('Failed to submit review');
         }
     }
 

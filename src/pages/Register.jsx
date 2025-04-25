@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import bcrypt from 'bcryptjs';
+import axios from 'axios'; // Use axios
 
 function Register() {
     const [username, setUsername] = useState('');
@@ -18,23 +19,15 @@ function Register() {
                 username,
                 email,
                 password: hashedPassword,
-                role: 'user'
+                role: 'user',
             };
 
-            const response = await fetch('http://localhost:3001/users', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(newUser),
-            });
-
-            if (response.ok) {
-                navigate('/login');
-            } else {
-                alert('Registration failed');
-            }
+            await axios.post('/http://localhost:8080/users', newUser);
+            navigate('/login');
         } catch (error) {
             console.error('Error registering:', error);
-            alert('Error during registration');
+            const errorMessage = error.response?.data?.error || 'Error during registration';
+            alert(errorMessage);
         }
     }
 

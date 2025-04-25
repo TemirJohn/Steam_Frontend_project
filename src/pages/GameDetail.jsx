@@ -11,10 +11,10 @@ function GameDetail() {
     const user = useSelector((state) => state.auth.user);
 
     useEffect(() => {
-        fetch(`http://localhost:3001/games/${id}`)
+        fetch(`http://localhost:8080/games/${id}`)
             .then((res) => res.json())
             .then((data) => setGame(data));
-        fetch(`http://localhost:3001/reviews?gameId=${id}`)
+        fetch(`http://localhost:8080/reviews?gameId=${id}`)
             .then((res) => res.json())
             .then((data) => setReviews(data));
     }, [id]);
@@ -32,7 +32,7 @@ function GameDetail() {
         };
 
         try {
-            const response = await fetch('http://localhost:3001/purchases', {
+            const response = await fetch('http://localhost:8080/purchases', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(purchase),
@@ -48,7 +48,7 @@ function GameDetail() {
     if (!game) return <div>Loading...</div>;
 
     const handleReviewAdded = () => {
-        fetch(`http://localhost:3001/reviews?gameId=${id}`)
+        fetch(`http://localhost:8080/reviews?gameId=${id}`)
             .then((res) => res.json())
             .then((data) => setReviews(data));
     };

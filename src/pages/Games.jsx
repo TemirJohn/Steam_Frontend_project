@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useSearchParams } from 'react-router-dom';
-import axios from '../utils/axios';
+import axios from 'axios';
 
 function Games() {
     const [games, setGames] = useState([]);

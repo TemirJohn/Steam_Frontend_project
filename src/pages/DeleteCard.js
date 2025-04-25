@@ -18,7 +18,7 @@ function DeleteCard() {
             return;
         }
 
-        fetch(`http://localhost:3001/games/${id}`)
+        fetch(`http://localhost:8080/games/${id}`)
             .then((res) => {
                 if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
                 return res.text();
@@ -37,7 +37,7 @@ function DeleteCard() {
 
     async function handleDelete() {
         try {
-            const response = await fetch(`http://localhost:3001/games/${id}`, {
+            const response = await fetch(`http://localhost:8080/games/${id}`, {
                 method: 'DELETE',
             });
             if (response.ok) {

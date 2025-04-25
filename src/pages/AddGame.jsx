@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../redux/authReducer';
-import axios from '../axios';
+import axios from 'axios';
 
 function AddGame() {
     const dispatch = useDispatch();

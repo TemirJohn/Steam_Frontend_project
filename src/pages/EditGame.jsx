@@ -21,7 +21,7 @@ function EditGame() {
     }, [user, navigate]);
 
     useEffect(() => {
-        fetch(`http://localhost:3001/games/${id}`)
+        fetch(`http://localhost:8080/games/${id}`)
             .then(res => res.json())
             .then(data => {
                 setGame(data);
@@ -30,7 +30,7 @@ function EditGame() {
                 setDescription(data.description);
             });
 
-        fetch(`http://localhost:3001/games/${id}`)
+        fetch(`http://localhost:8080/games/${id}`)
             .then((res) => {
                 if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
                 return res.text();
@@ -62,7 +62,7 @@ function EditGame() {
         };
 
         try {
-            const res = await fetch(`http://localhost:3001/games/${id}`, {
+            const res = await fetch(`http://localhost:8080/games/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(updatedGame),
