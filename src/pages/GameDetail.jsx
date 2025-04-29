@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
+import axios from '../utils/axiosConfig';
 import ReviewForm from '../components/ReviewForm';
+import { toast } from 'react-toastify';
 
 function GameDetail() {
     const { id } = useParams();
@@ -11,83 +13,98 @@ function GameDetail() {
     const user = useSelector((state) => state.auth.user);
 
     useEffect(() => {
-        fetch(`http://localhost:8080/games/${id}`)
-            .then((res) => res.json())
-            .then((data) => setGame(data));
-        fetch(`http://localhost:8080/reviews?gameId=${id}`)
-            .then((res) => res.json())
-            .then((data) => setReviews(data));
+        axios.get(`/games/${id}`)
+            .then((res) => setGame(res.data))
+            .catch((err) => {
+                console.error('Error fetching game:', err);
+                toast.error('Failed to load game');
+            });
+
+        axios.get(`/reviews?gameId=${id}`)
+            .then((res) => setReviews(res.data))
+            .catch((err) => {
+                console.error('Error fetching reviews:', err);
+                toast.error('Failed to load reviews');
+            });
     }, [id]);
 
-    async function handlePurchase() {
+    const handlePurchase = async () => {
         if (!user) {
-            alert('Please log in to purchase');
+            toast.error('Please log in to purchase');
             return;
         }
 
-        const purchase = {
-            userId: user.id,
-            gameId: Number(id),
-            purchaseDate: new Date().toISOString().split('T')[0],
-        };
-
         try {
-            const response = await fetch('http://localhost:8080/purchases', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(purchase),
+            await axios.post('/ownership', {
+                gameId: Number(id),
+                status: 'owned',
             });
-            if (response.ok) {
-                alert('Game purchased successfully!');
-            }
+            toast.success('Game purchased successfully!');
         } catch (error) {
             console.error('Error purchasing game:', error);
+            toast.error('Failed to purchase game');
         }
-    }
-
-    if (!game) return <div>Loading...</div>;
-
-    const handleReviewAdded = () => {
-        fetch(`http://localhost:8080/reviews?gameId=${id}`)
-            .then((res) => res.json())
-            .then((data) => setReviews(data));
     };
 
-    const isEditor = user && (user.role === 'admin' || user.role === 'developer');
+    const handleReviewAdded = () => {
+        axios.get(`/reviews?gameId=${id}`)
+            .then((res) => setReviews(res.data))
+            .catch((err) => {
+                console.error('Error fetching reviews:', err);
+                toast.error('Failed to load reviews');
+            });
+    };
 
     if (!game) return <div>Loading...</div>;
 
+    const isEditor =
+        user &&
+        (user.role === 'admin' || (user.role === 'developer' && user.id === game.developerId));
+
     return (
-        <div className="container">
-            <h1>{game.title}</h1>
-            <p>${game.price}</p>
-            <p>{game.description}</p>
+        <div className="container mx-auto p-4">
+            <h1 className="text-2xl font-bold mb-4">{game.name}</h1>
+            <img
+                src={`http://localhost:8080/${game.image}`} // можешь заменить на `${process.env.REACT_APP_API_URL}/${game.image}` для продакшна
+                alt={game.name}
+                className="w-full h-64 object-cover mb-4"
+            />
+            <p className="text-lg mb-2">${game.price.toFixed(2)}</p>
+            <p className="text-gray-600 mb-4">{game.description}</p>
+
             {isEditor && (
-                <>
+                <div className="mb-4">
                     <Link to={`/games/${id}/edit`}>
-                        <button className="btn btn-blue">Edit Game</button>
+                        <button className="bg-blue-500 text-white px-4 py-2 rounded mr-2">
+                            Edit Game
+                        </button>
                     </Link>
                     <Link to={`/delete-game/${id}`}>
-                        <button className="btn btn-red">Delete Game</button>
+                        <button className="bg-red-500 text-white px-4 py-2 rounded">
+                            Delete Game
+                        </button>
                     </Link>
-                </>
+                </div>
             )}
+
             {user && user.role === 'user' && (
                 <button
                     onClick={handlePurchase}
-                    className="btn btn-green"
+                    className="bg-green-500 text-white px-4 py-2 rounded mb-4"
                 >
                     Buy Now
                 </button>
             )}
-            <h2>Reviews</h2>
-            <ul>
+
+            <h2 className="text-xl font-semibold mb-2">Reviews</h2>
+            <ul className="mb-4">
                 {reviews.map((review) => (
-                    <li key={review.id}>
+                    <li key={review.id} className="border-b py-2">
                         Rating: {review.rating}/5 - {review.comment}
                     </li>
                 ))}
             </ul>
+
             {user && (
                 <ReviewForm gameId={Number(id)} onReviewAdded={handleReviewAdded} />
             )}

@@ -1,161 +1,92 @@
-import { Link } from 'react-router-dom';
+import axios from 'src/pages/utils/axios';
 
-function GameCard({ game }) {
-    return (
-        <div className="game-card">
-            <h3>{game.title}</h3>
-            <p>${game.price}</p>
-            <p>{game.description}</p>
-            <Link to={`/games/${game.id}`}>View Details</Link>
-        </div>
-    );
-}
+const instance = axios.create({
+    baseURL: process.env.REACT_APP_API_URL || 'http://localhost:8080',
+});
 
-export default GameCard;
-
-import { Link } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
-import { logout } from '../redux/authReducer';
-
-function Navbar() {
-    const user = useSelector((state) => state.auth.user);
-    const dispatch = useDispatch();
-
-    return (
-        <nav className="navbar">
-            <Link to="/">Home</Link>
-            {user ? (
-                <>
-                    {(user.role === 'admin' || user.role === 'developer') && (
-                        <Link to="/dashboard">Dashboard</Link>
-                    )}
-                    <Link to="/games">Games</Link>
-                    <button onClick={() => dispatch(logout())} className="btn btn-red">Logout</button>
-                    <span >👋 {user.username}</span>
-                </>
-            ) : (
-                <>
-                    <Link to="/login">Login</Link>
-                    <Link to="/register">Register</Link>
-                </>
-            )}
-        </nav>
-    );
-}
-
-export default Navbar;
-
-import { useState } from 'react';
-import { useSelector } from 'react-redux';
-
-function ReviewForm({ gameId, onReviewAdded }) {
-    const [rating, setRating] = useState(5);
-    const [comment, setComment] = useState('');
-    const user = useSelector((state) => state.auth.user);
-
-    async function handleSubmit(e) {
-        e.preventDefault();
-        if (!user) return;
-
-        const review = { userId: user.id, gameId, rating, comment };
-
-        try {
-            const response = await fetch('http://localhost:3001/reviews', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(review),
-            });
-            if (response.ok) {
-                onReviewAdded();
-                setRating(5);
-                setComment('');
-            }
-        } catch (error) {
-            console.error('Error submitting review:', error);
-        }
+instance.interceptors.request.use((config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
     }
+    return config;
+});
 
-    return (
-        <form onSubmit={handleSubmit}>
-            <label>
-                Rating (1-5):
-                <input
-                    type="number"
-                    min="1"
-                    max="5"
-                    value={rating}
-                    onChange={(e) => setRating(Number(e.target.value))}
-                />
-            </label>
-            <label>
-                Comment:
-                <textarea
-                    value={comment}
-                    onChange={(e) => setComment(e.target.value)}
-                />
-            </label>
-            <button type="submit" className="btn btn-blue">Submit Review</button>
-        </form>
-    );
-}
-
-export default ReviewForm;
+export default instance;
 
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { logout } from '../redux/authReducer';
-import axios from '../axios';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { addGame } from '../redux/gameReducer';
+import { toast } from 'react-toastify';
 
 function AddGame() {
+    const [formData, setFormData] = useState({
+        name: '',
+        description: '',
+        price: '',
+        category_id: '',
+        image: null,
+    });
+
+    const user = useSelector((state) => state.auth.user);
     const dispatch = useDispatch();
     const navigate = useNavigate();
-    const user = useSelector((state) => state.auth.user);
-    const [name, setName] = useState('');
-    const [price, setPrice] = useState('');
-    const [description, setDescription] = useState('');
-    const [categoryId, setCategoryId] = useState('');
     const [categories, setCategories] = useState([]);
 
     useEffect(() => {
-        if (!user || user.role !== 'admin') {
-            alert('Access denied! Only admins can add games.');
-            dispatch(logout());
-            navigate('/login');
-        }
-    }, [user, navigate, dispatch]);
+        const fetchCategories = async () => {
+            try {
+                const response = await axios.get('http://localhost:8080/categories');
+                setCategories(response.data);
+            } catch (error) {
+                console.error('Error fetching categories:', error);
+                toast.error('Failed to load categories');
+            }
+        };
+        fetchCategories();
+    }, []);
 
     useEffect(() => {
-        axios
-            .get('/categories')
-            .then((res) => {
-                setCategories(res.data);
-                if (res.data.length > 0) setCategoryId(res.data[0].id);
-            })
-            .catch((err) => console.error('Failed to load categories:', err));
-    }, []);
+        if (!user || (user.role !== 'admin' && user.role !== 'developer')) {
+            toast.error('Access denied! Only admins and developers can add games.');
+            navigate('/dashboard');
+        }
+    }, [user, navigate]);
+
+    const handleChange = (e) => {
+        const { name, value, files } = e.target;
+        if (files) {
+            setFormData({ ...formData, [name]: files[0] });
+        } else {
+            setFormData({ ...formData, [name]: value });
+        }
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!name || !price || !categoryId) {
-            alert('Please fill in all required fields.');
+        if (!formData.category_id) {
+            toast.error('Please select a category');
+            return;
+        }
+        if (!formData.image) {
+            toast.error('Please upload an image');
             return;
         }
         try {
-            const newGame = {
-                name,
-                price: parseFloat(price),
-                description,
-                categoryId: parseInt(categoryId),
-            };
-            await axios.post('/games', newGame, {
-                headers: { 'User-ID': user.id },
-            });
-            alert('Game added!');
+            const data = new FormData();
+            for (let key in formData) {
+                data.append(key, formData[key]);
+            }
+            const response = await axios.post('http://localhost:8080/games', data);
+            dispatch(addGame(response.data));
+            toast.success('Game added successfully!');
             navigate('/dashboard');
         } catch (error) {
+            const errorMessage = error.response?.data?.message || 'Error adding game';
             console.error('Error adding game:', error);
-            alert('Failed to add game');
+            toast.error(errorMessage);
         }
     };
 
@@ -167,8 +98,9 @@ function AddGame() {
                     Name:
                     <input
                         type="text"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
+                        name="name"
+                        value={formData.name}
+                        onChange={handleChange}
                         className="border p-2 rounded w-full"
                         required
                     />
@@ -178,8 +110,9 @@ function AddGame() {
                     <input
                         type="number"
                         step="0.01"
-                        value={price}
-                        onChange={(e) => setPrice(e.target.value)}
+                        name="price"
+                        value={formData.price}
+                        onChange={handleChange}
                         className="border p-2 rounded w-full"
                         required
                     />
@@ -187,16 +120,18 @@ function AddGame() {
                 <label className="block">
                     Description:
                     <textarea
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
+                        name="description"
+                        value={formData.description}
+                        onChange={handleChange}
                         className="border p-2 rounded w-full"
                     />
                 </label>
                 <label className="block">
                     Category:
                     <select
-                        value={categoryId}
-                        onChange={(e) => setCategoryId(e.target.value)}
+                        name="category_id"
+                        value={formData.category_id}
+                        onChange={handleChange}
                         className="border p-2 rounded w-full"
                     >
                         {categories.map((cat) => (
@@ -205,6 +140,16 @@ function AddGame() {
                             </option>
                         ))}
                     </select>
+                </label>
+                <label className="block">
+                    Image:
+                    <input
+                        type="file"
+                        name="image"
+                        accept="image/*"
+                        onChange={handleChange}
+                        className="border p-2 rounded w-full"
+                    />
                 </label>
                 <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded w-full">
                     Add Game
@@ -215,14 +160,6 @@ function AddGame() {
 }
 
 export default AddGame;
-
-import axios from 'axios';
-
-const instance = axios.create({
-    baseURL: 'http://localhost:8080',
-});
-
-export default instance;
 
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
@@ -255,6 +192,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../redux/authReducer';
+import { toast } from 'react-toastify';
+
 
 function DeleteCard() {
     const { id } = useParams();
@@ -265,13 +204,13 @@ function DeleteCard() {
 
     useEffect(() => {
         if (!user || (user.role !== 'admin' && user.role !== 'developer')) {
-            alert('Access denied! Only developers can delete games.');
+            toast.error('Access denied! Only developers can delete games.');
             dispatch(logout());
             navigate('/login');
             return;
         }
 
-        fetch(`http://localhost:3001/games/${id}`)
+        fetch(`http://localhost:8080/games/${id}`)
             .then((res) => {
                 if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
                 return res.text();
@@ -279,7 +218,7 @@ function DeleteCard() {
             .then((text) => {
                 const data = JSON.parse(text);
                 if (user.role === 'developer' && data.developerId !== user.id) {
-                    alert('You can only delete your own games.');
+                    toast.error('You can only delete your own games.');
                     navigate('/dashboard');
                 } else {
                     setGame(data);
@@ -290,18 +229,18 @@ function DeleteCard() {
 
     async function handleDelete() {
         try {
-            const response = await fetch(`http://localhost:3001/games/${id}`, {
+            const response = await fetch(`http://localhost:8080/games/${id}`, {
                 method: 'DELETE',
             });
             if (response.ok) {
-                alert('Game deleted successfully!');
+                toast.success('Game deleted successfully!');
                 navigate('/dashboard');
             } else {
                 throw new Error('Failed to delete game');
             }
         } catch (error) {
             console.error('Error deleting game:', error);
-            alert('Error deleting game. Check console for details.');
+            toast.error('Error deleting game. Check console for details');
         }
     }
 
@@ -324,6 +263,9 @@ export default DeleteCard;
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { toast } from 'react-toastify';
+
+
 
 function EditGame() {
     const { id } = useParams();
@@ -337,13 +279,13 @@ function EditGame() {
 
     useEffect(() => {
         if (!user || (user.role !== 'admin' && user.role !== 'developer')) {
-            alert('Access denied');
+            toast.error('Access denied');
             navigate('/');
         }
     }, [user, navigate]);
 
     useEffect(() => {
-        fetch(`http://localhost:3001/games/${id}`)
+        fetch(`http://localhost:8080/games/${id}`)
             .then(res => res.json())
             .then(data => {
                 setGame(data);
@@ -352,7 +294,7 @@ function EditGame() {
                 setDescription(data.description);
             });
 
-        fetch(`http://localhost:3001/games/${id}`)
+        fetch(`http://localhost:8080/games/${id}`)
             .then((res) => {
                 if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
                 return res.text();
@@ -361,7 +303,7 @@ function EditGame() {
                 console.log('Raw game response:', text);
                 const data = JSON.parse(text);
                 if (user.role === 'developer' && data.developerId !== user.id) {
-                    alert('You can only edit your own games.');
+                    toast.error('You can only edit your own games.');
                     navigate('/dashboard');
                 } else {
                     setGame(data);
@@ -384,17 +326,17 @@ function EditGame() {
         };
 
         try {
-            const res = await fetch(`http://localhost:3001/games/${id}`, {
+            const res = await fetch(`http://localhost:8080/games/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(updatedGame),
             });
 
             if (res.ok) {
-                alert('Game updated successfully!');
+                toast.success('Game updated successfully!');
                 navigate(`/games/${id}`);
             } else {
-                alert('Failed to update game');
+                toast.error('Failed to update game');
             }
         } catch (error) {
             console.error('Error:', error);
@@ -441,10 +383,10 @@ function GameDetail() {
     const user = useSelector((state) => state.auth.user);
 
     useEffect(() => {
-        fetch(`http://localhost:3001/games/${id}`)
+        fetch(`http://localhost:8080/games/${id}`)
             .then((res) => res.json())
             .then((data) => setGame(data));
-        fetch(`http://localhost:3001/reviews?gameId=${id}`)
+        fetch(`http://localhost:8080/reviews?gameId=${id}`)
             .then((res) => res.json())
             .then((data) => setReviews(data));
     }, [id]);
@@ -462,7 +404,7 @@ function GameDetail() {
         };
 
         try {
-            const response = await fetch('http://localhost:3001/purchases', {
+            const response = await fetch('http://localhost:8080/purchases', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(purchase),
@@ -478,7 +420,7 @@ function GameDetail() {
     if (!game) return <div>Loading...</div>;
 
     const handleReviewAdded = () => {
-        fetch(`http://localhost:3001/reviews?gameId=${id}`)
+        fetch(`http://localhost:8080/reviews?gameId=${id}`)
             .then((res) => res.json())
             .then((data) => setReviews(data));
     };
@@ -530,7 +472,7 @@ export default GameDetail;
 import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useSearchParams } from 'react-router-dom';
-import axios from '../utils/axios';
+import axios from 'axios';
 
 function Games() {
     const [games, setGames] = useState([]);
@@ -610,31 +552,21 @@ export default Games;
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { axios } from '../utils/axios';
+import axios from 'axios';
 import GameCard from '../components/GameCard';
 
 function Home() {
     const user = useSelector((state) => state.auth.user);
     const [games, setGames] = useState([]);
+    const [ownedGames, setOwnedGames] = useState([]);
     const [searchParams, setSearchParams] = useSearchParams();
     const categoryFilter = searchParams.get('category') || 'all';
 
-    // useEffect(() => {
-    //     let url = 'http://localhost:3001/games';
-    //     if (categoryFilter !== 'all') {
-    //         url += `?categoryId=${categoryFilter}`;
-    //     }
-    //
-    //     fetch(url)
-    //         .then((res) => res.json())
-    //         .then((data) => setGames(data))
-    //         .catch((error) => console.error('Error fetching games:', error));
-    // }, [categoryFilter]);
 
     useEffect(() => {
         if (user) {
             axios
-                .get(`http://localhost:8080/library`, {
+                .get(`/games`, {
                     headers: { "User-ID": user.id },
                 })
                 .then((res) => setOwnedGames(res.data));
@@ -693,7 +625,7 @@ export default Home;
 
 import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import axios from '../utils/axios'; // Ensure axios is configured (see below)
+import axios from 'axios';
 
 function Library() {
     const [ownedGames, setOwnedGames] = useState([]);
@@ -702,16 +634,16 @@ function Library() {
     useEffect(() => {
         if (user) {
             axios
-                .get('http://localhost:8080/library', {
-                    headers: { 'User-ID': user.id },
-                })
+                .get('/library')
                 .then((res) => setOwnedGames(res.data))
-                .catch((err) => {
-                    console.error('Error fetching library:', err);
-                    alert('Failed to load library');
-                });
+                .catch((err) => console.error('Error fetching library:', err));
         }
     }, [user]);
+
+    if (!user) {
+        return <div>Please log in to view your library.</div>;
+    }
+
 
     return (
         <div className="container mx-auto p-4">
@@ -741,7 +673,7 @@ import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { login } from '../redux/authReducer';
-import axios from '../utils/axios';
+import axios from 'axios';
 
 function Login() {
     const dispatch = useDispatch();
@@ -752,8 +684,9 @@ function Login() {
     async function handleLogin(e) {
         e.preventDefault();
         try {
-            const response = await axios.post('/login', { email, password });
-            dispatch(login(response.data));
+            const response = await axios.post('http://localhost:8080/login', { email, password });
+            localStorage.setItem('token', response.data.token);
+            dispatch(login(response.data.user));
             navigate('/dashboard');
         } catch (error) {
             console.error('Login error:', error);
@@ -810,7 +743,7 @@ function ManageUsers() {
     }, [user, navigate, dispatch]);
 
     useEffect(() => {
-        fetch('http://localhost:3001/users')
+        fetch('http://localhost:8080/users')
             .then((res) => res.json())
             .then((data) => setUsers(data))
             .catch((error) => console.error('Error fetching users:', error));
@@ -818,7 +751,7 @@ function ManageUsers() {
 
     async function handleDelete(id) {
         try {
-            const response = await fetch(`http://localhost:3001/users/${id}`, {
+            const response = await fetch(`http://localhost:8080/users/${id}`, {
                 method: 'DELETE',
             });
             if (response.ok) {
@@ -854,6 +787,7 @@ export default ManageUsers;
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import bcrypt from 'bcryptjs';
+import axios from 'axios'; // Use axios
 
 function Register() {
     const [username, setUsername] = useState('');
@@ -865,29 +799,19 @@ function Register() {
         e.preventDefault();
 
         try {
-            const hashedPassword = await bcrypt.hash(password, 10);
-
             const newUser = {
-                username,
+                name: username,
                 email,
-                password: hashedPassword,
-                role: 'user'
+                password,
+                role: 'user',
             };
 
-            const response = await fetch('http://localhost:3001/users', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(newUser),
-            });
-
-            if (response.ok) {
-                navigate('/login');
-            } else {
-                alert('Registration failed');
-            }
+            await axios.post('http://localhost:8080/users', newUser);
+            navigate('/login');
         } catch (error) {
             console.error('Error registering:', error);
-            alert('Error during registration');
+            const errorMessage = error.response?.data?.error || 'Error during registration';
+            alert(errorMessage);
         }
     }
 
@@ -923,122 +847,3 @@ function Register() {
 }
 
 export default Register;
-
-const initialState = { user: null };
-
-function authReducer(state = initialState, action) {
-    switch (action.type) {
-        case 'LOGIN':
-            return { ...state, user: action.payload };
-        case 'LOGOUT':
-            return { ...state, user: null };
-        default:
-            return state;
-    }
-}
-
-export default authReducer;
-
-export const login = (user) => ({ type: 'LOGIN', payload: user });
-export const logout = () => ({ type: 'LOGOUT' });
-
-import { createStore, combineReducers } from 'redux';
-import authReducer from './authReducer';
-
-const rootReducer = combineReducers({
-    auth: authReducer,
-});
-
-const store = createStore(rootReducer);
-
-export default store;
-
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import Navbar from './components/Navbar';
-import Home from './pages/Home';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import Dashboard from './pages/Dashboard';
-import Games from './pages/Games';
-import GameDetail from './pages/GameDetail';
-import AddGame from './pages/AddGame';
-import ManageUsers from './pages/ManageUsers';
-import EditGame from './pages/EditGame';
-import DeleteCard from './pages/DeleteCard';
-import Library from "./pages/Library";
-
-function App() {
-    const user = useSelector((state) => state.auth.user);
-
-    return (
-        <BrowserRouter>
-            <Navbar />
-            <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-                <Route path="/dashboard" element={user ? <Dashboard /> : <Navigate to="/login" />} />
-                <Route path="/games" element={<Games />} />
-                <Route path="/games/:id" element={<GameDetail />} />
-                <Route path="/games/:id/edit" element={<EditGame />} />
-                <Route path="/add-game" element={user ? <AddGame /> : <Navigate to="/dashboard" />} />
-                <Route path="/delete-game/:id" element={user ? <DeleteCard /> : <Navigate to="/dashboard" />} />
-                <Route path="/manage-users" element={user ? <ManageUsers /> : <Navigate to="/dashboard" />} />
-                <Route path="/library" element={<Library />} />
-            </Routes>
-        </BrowserRouter>
-    );
-}
-
-export default App;
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-* {
-    font-family: "Duru Sans", sans-serif;
-}
-
-.gradient {
-    background: rgb(58, 99, 144);
-    background: linear-gradient(
-            90deg,
-            rgba(58, 99, 144, 1) 8%,
-            rgba(90, 140, 182, 1) 31%,
-            rgba(35, 71, 138, 1) 52%,
-            rgba(27, 55, 125, 1) 58%
-    );
-}
-
-body {
-    margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
-    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
-    sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-}
-
-code {
-    font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
-    monospace;
-}
-
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import { Provider } from 'react-redux';
-import store from './redux/store';
-import App from './App';
-import './index.css';
-
-const root = ReactDOM.createRoot(document.getElementById('root'));
-
-root.render(
-    <React.StrictMode>
-        <Provider store={store}>
-            <App />
-        </Provider>
-    </React.StrictMode>
-);

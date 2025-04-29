@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useSearchParams } from 'react-router-dom';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 function Games() {
     const [games, setGames] = useState([]);
@@ -14,21 +15,23 @@ function Games() {
         axios
             .get(url)
             .then((res) => setGames(res.data))
-            .catch((err) => console.error('Error fetching games:', err));
+            .catch((err) => {
+                console.error('Error fetching games:', err);
+                toast.error('Failed to load games');
+            });
     }, [categoryId]);
 
     const handleBuy = async (gameId) => {
-        if (!user) return alert('Please log in to buy games.');
+        if (!user) {
+            toast.error('Please log in to buy games.');
+            return;
+        }
         try {
-            await axios.post(
-                '/ownership',
-                { gameId, status: 'owned' },
-                { headers: { 'User-ID': user.id } }
-            );
-            alert('Game purchased!');
+            await axios.post('/ownership', { gameId, status: 'owned' });
+            toast.success('Game purchased!');
         } catch (error) {
             console.error('Error purchasing game:', error);
-            alert('Failed to purchase game');
+            toast.error('Failed to purchase game');
         }
     };
 
@@ -58,6 +61,7 @@ function Games() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {games.map((game) => (
                     <div key={game.id} className="p-4 bg-gray-100 rounded shadow">
+                        <img src={`http://localhost:8080/${game.image}`} alt={game.name} className="w-full h-48 object-cover mb-2" />
                         <h3 className="text-lg font-semibold">{game.name}</h3>
                         <p>${game.price.toFixed(2)}</p>
                         <p className="text-gray-600">{game.description}</p>

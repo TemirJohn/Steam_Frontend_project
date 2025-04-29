@@ -1,104 +1,112 @@
-// src/pages/EditGame.jsx
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import axios from 'axios';
+import { updateGame } from '../redux/gameReducer';
+import { toast } from 'react-toastify';
 
 function EditGame() {
     const { id } = useParams();
     const navigate = useNavigate();
+    const dispatch = useDispatch();
     const user = useSelector((state) => state.auth.user);
-
     const [game, setGame] = useState(null);
-    const [title, setTitle] = useState('');
+    const [name, setName] = useState('');
     const [price, setPrice] = useState('');
     const [description, setDescription] = useState('');
 
     useEffect(() => {
         if (!user || (user.role !== 'admin' && user.role !== 'developer')) {
-            alert('Access denied');
+            toast.error('Access denied');
             navigate('/');
         }
     }, [user, navigate]);
 
     useEffect(() => {
-        fetch(`http://localhost:8080/games/${id}`)
-            .then(res => res.json())
-            .then(data => {
-                setGame(data);
-                setTitle(data.title);
-                setPrice(data.price);
-                setDescription(data.description);
-            });
-
-        fetch(`http://localhost:8080/games/${id}`)
+        axios.get(`http://localhost:8080/games/${id}`)
             .then((res) => {
-                if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
-                return res.text();
-            })
-            .then((text) => {
-                console.log('Raw game response:', text);
-                const data = JSON.parse(text);
+                const data = res.data;
                 if (user.role === 'developer' && data.developerId !== user.id) {
-                    alert('You can only edit your own games.');
+                    toast.error('You can only edit your own games.');
                     navigate('/dashboard');
                 } else {
                     setGame(data);
+                    setName(data.name);
+                    setPrice(data.price);
+                    setDescription(data.description);
                 }
             })
-            .catch((error) => console.error('Error fetching game:', error));
-
+            .catch((error) => {
+                console.error('Error fetching game:', error);
+                toast.error('Failed to load game');
+            });
     }, [id, user, navigate]);
-
-
 
     const handleSave = async (e) => {
         e.preventDefault();
 
         const updatedGame = {
-            ...game,
-            title,
+            name,
             price: Number(price),
-            description
+            description,
         };
 
         try {
-            const res = await fetch(`http://localhost:8080/games/${id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(updatedGame),
-            });
-
-            if (res.ok) {
-                alert('Game updated successfully!');
-                navigate(`/games/${id}`);
-            } else {
-                alert('Failed to update game');
-            }
+            const res = await axios.put(`http://localhost:8080/games/${id}`, updatedGame);
+            dispatch(updateGame(res.data));
+            toast.success('Game updated successfully!');
+            navigate(`/games/${id}`);
         } catch (error) {
             console.error('Error:', error);
+            toast.error('Failed to update game');
         }
     };
 
     if (!game) return <div>Loading...</div>;
 
     return (
-        <div className="container">
-            <h1 >Edit Game</h1>
-            <form onSubmit={handleSave}>
-                <label>
-                    Title:
-                    <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} />
+        <div className="container mx-auto p-4">
+            <h1 className="text-2xl font-bold mb-4">Edit Game</h1>
+            <form onSubmit={handleSave} className="max-w-md mx-auto space-y-4">
+                <label className="block">
+                    Name:
+                    <input
+                        type="text"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        className="border p-2 rounded w-full"
+                        required
+                    />
                 </label>
-                <label>
+                <label className="block">
                     Price:
-                    <input type="number" value={price} onChange={(e) => setPrice(e.target.value)} />
+                    <input
+                        type="number"
+                        step="0.01"
+                        value={price}
+                        onChange={(e) => setPrice(e.target.value)}
+                        className="border p-2 rounded w-full"
+                        required
+                    />
                 </label>
-                <label>
+                <label className="block">
                     Description:
-                    <textarea value={description} onChange={(e) => setDescription(e.target.value)} />
+                    <textarea
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        className="border p-2 rounded w-full"
+                    />
                 </label>
-                <button type="submit" className="btn btn-blue">Save</button>
-                <button type="button" className="btn btn-grey" onClick={() => navigate(-1)}>Cancel</button>
+                <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded w-full">
+                    Save
+                </button>
+                <button
+                    type="button"
+                    className="bg-gray-500 text-white px-4 py-2 rounded w-full"
+                    onClick={() => navigate(-1)}
+                >
+                    Cancel
+                </button>
             </form>
         </div>
     );

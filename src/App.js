@@ -1,38 +1,92 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { Provider } from 'react-redux';
+import { PersistGate } from 'redux-persist/integration/react';
+import { store, persistor } from './redux/store';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import Dashboard from './pages/Dashboard';
 import Games from './pages/Games';
 import GameDetail from './pages/GameDetail';
 import AddGame from './pages/AddGame';
-import ManageUsers from './pages/ManageUsers';
 import EditGame from './pages/EditGame';
 import DeleteCard from './pages/DeleteCard';
-import Library from "./pages/Library";
+import Library from './pages/Library';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Dashboard from './pages/Dashboard';
+import ManageUsers from './pages/ManageUsers';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
+function ProtectedRoute({ children, allowedRoles }) {
+    const user = useSelector((state) => state.auth.user);
+    if (!user) {
+        return <Navigate to="/login" />;
+    }
+    if (allowedRoles && !allowedRoles.includes(user.role)) {
+        return <Navigate to="/dashboard" />;
+    }
+    return children;
+}
 
 function App() {
-    const user = useSelector((state) => state.auth.user);
-
     return (
-        <BrowserRouter>
-            <Navbar />
-            <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-                <Route path="/dashboard" element={user ? <Dashboard /> : <Navigate to="/login" />} />
-                <Route path="/games" element={<Games />} />
-                <Route path="/games/:id" element={<GameDetail />} />
-                <Route path="/games/:id/edit" element={<EditGame />} />
-                <Route path="/add-game" element={user ? <AddGame /> : <Navigate to="/dashboard" />} />
-                <Route path="/delete-game/:id" element={user ? <DeleteCard /> : <Navigate to="/dashboard" />} />
-                <Route path="/manage-users" element={user ? <ManageUsers /> : <Navigate to="/dashboard" />} />
-                <Route path="/library" element={<Library />} />
-            </Routes>
-        </BrowserRouter>
+        <Provider store={store}>
+            <PersistGate loading={null} persistor={persistor}>
+                <BrowserRouter>
+                    <Navbar />
+                    <Routes>
+                        <Route path="/login" element={<Login />} />
+                        <Route path="/register" element={<Register />} />
+                        <Route path="/" element={<Home />} />
+                        <Route path="/games" element={<Games />} />
+                        <Route path="/games/:id" element={<GameDetail />} />
+                        <Route
+                            path="/add-game"
+                            element={
+                                <ProtectedRoute allowedRoles={['admin', 'developer']}>
+                                    <AddGame />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/games/:id/edit"
+                            element={
+                                <ProtectedRoute allowedRoles={['admin', 'developer']}>
+                                    <EditGame />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/delete-game/:id"
+                            element={
+                                <ProtectedRoute allowedRoles={['admin', 'developer']}>
+                                    <DeleteCard />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/manage-users"
+                            element={
+                                <ProtectedRoute allowedRoles={['admin']}>
+                                    <ManageUsers />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/library"
+                            element={
+                                <ProtectedRoute allowedRoles={['user']}>
+                                    <Library />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route path="/dashboard" element={<Dashboard />} />
+                    </Routes>
+                    <ToastContainer />
+                </BrowserRouter>
+            </PersistGate>
+        </Provider>
     );
 }
 

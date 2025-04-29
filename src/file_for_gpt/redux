@@ -1,0 +1,62 @@
+const initialState = { user: null };
+
+function authReducer(state = initialState, action) {
+    switch (action.type) {
+        case 'LOGIN':
+            return { ...state, user: action.payload };
+        case 'LOGOUT':
+            return { ...state, user: null };
+        default:
+            return state;
+    }
+}
+
+export default authReducer;
+
+export const login = (user) => ({ type: 'LOGIN', payload: user });
+export const logout = () => ({ type: 'LOGOUT' });
+
+import { createSlice } from '@reduxjs/toolkit';
+
+const gameSlice = createSlice({
+    name: 'games',
+    initialState: {
+        games: [],
+    },
+    reducers: {
+        setGames: (state, action) => {
+            state.games = action.payload;
+        },
+        addGame: (state, action) => {
+            state.games.push(action.payload);
+        },
+        updateGame: (state, action) => {
+            const updatedGame = action.payload;
+            const index = state.games.findIndex((game) => game.id === updatedGame.id);
+            if (index !== -1) {
+                state.games[index] = updatedGame;
+            }
+        },
+        deleteGame: (state, action) => {
+            const id = action.payload;
+            state.games = state.games.filter((game) => game.id !== id);
+        },
+    },
+});
+
+export const { setGames, addGame, updateGame, deleteGame } = gameSlice.actions;
+
+export default gameSlice.reducer;
+
+import { createStore, combineReducers } from 'redux';
+import authReducer from './authReducer';
+import gameReducer from "./gameReducer";
+
+const rootReducer = combineReducers({
+    auth: authReducer,
+    games: gameReducer,
+});
+
+const store = createStore(rootReducer);
+
+export default store;

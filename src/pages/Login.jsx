@@ -3,6 +3,7 @@ import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { login } from '../redux/authReducer';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 function Login() {
     const dispatch = useDispatch();
@@ -13,13 +14,15 @@ function Login() {
     async function handleLogin(e) {
         e.preventDefault();
         try {
-            const response = await axios.post('/login', { email, password });
+            const response = await axios.post('http://localhost:8080/login', { email, password });
             localStorage.setItem('token', response.data.token);
+            localStorage.setItem('user', JSON.stringify(response.data.user));
             dispatch(login(response.data.user));
+            toast.success('Logged in successfully!');
             navigate('/dashboard');
         } catch (error) {
             console.error('Login error:', error);
-            alert(error.response?.data?.error || 'Login failed');
+            toast.error(error.response?.data?.error || 'Login failed');
         }
     }
 

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import bcrypt from 'bcryptjs';
-import axios from 'axios'; // Use axios
+import axios from 'axios';
+import { toast } from 'react-toastify';
 
 function Register() {
     const [username, setUsername] = useState('');
@@ -13,33 +13,32 @@ function Register() {
         e.preventDefault();
 
         try {
-            const hashedPassword = await bcrypt.hash(password, 10);
-
             const newUser = {
                 username,
                 email,
-                password: hashedPassword,
+                password,
                 role: 'user',
             };
 
-            await axios.post('/http://localhost:8080/users', newUser);
+            await axios.post('http://localhost:8080/users', newUser);
+            toast.success('Registered successfully! Please log in.');
             navigate('/login');
         } catch (error) {
             console.error('Error registering:', error);
-            const errorMessage = error.response?.data?.error || 'Error during registration';
-            alert(errorMessage);
+            toast.error(error.response?.data?.error || 'Error during registration');
         }
     }
 
     return (
-        <div className="container">
-            <h1>Register</h1>
-            <form onSubmit={handleRegister}>
+        <div className="container mx-auto p-4">
+            <h1 className="text-2xl font-bold mb-4">Register</h1>
+            <form onSubmit={handleRegister} className="max-w-md mx-auto space-y-4">
                 <input
                     type="text"
                     placeholder="Username"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
+                    className="border p-2 rounded w-full"
                     required
                 />
                 <input
@@ -47,6 +46,7 @@ function Register() {
                     placeholder="Email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    className="border p-2 rounded w-full"
                     required
                 />
                 <input
@@ -54,9 +54,12 @@ function Register() {
                     placeholder="Password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    className="border p-2 rounded w-full"
                     required
                 />
-                <button type="submit" className="btn btn-blue">Register</button>
+                <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded w-full">
+                    Register
+                </button>
             </form>
         </div>
     );
