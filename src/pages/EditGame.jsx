@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import axios from 'axios';
+import axios from '../utils/axiosConfig';
 import { updateGame } from '../redux/gameReducer';
 import { toast } from 'react-toastify';
 
@@ -23,7 +23,7 @@ function EditGame() {
     }, [user, navigate]);
 
     useEffect(() => {
-        axios.get(`http://localhost:8080/games/${id}`)
+        axios.get(`/games/${id}`)
             .then((res) => {
                 const data = res.data;
                 if (user.role === 'developer' && data.developerId !== user.id) {
@@ -52,7 +52,7 @@ function EditGame() {
         };
 
         try {
-            const res = await axios.put(`http://localhost:8080/games/${id}`, updatedGame);
+            const res = await axios.put(`/games/${id}`, updatedGame);
             dispatch(updateGame(res.data));
             toast.success('Game updated successfully!');
             navigate(`/games/${id}`);
@@ -62,7 +62,11 @@ function EditGame() {
         }
     };
 
-    if (!game) return <div>Loading...</div>;
+    if (!game) return (
+        <div className="flex justify-center items-center h-screen">
+            <p className="text-gray-600 text-xl">Loading game data...</p>
+        </div>
+    );
 
     return (
         <div className="container mx-auto p-4">

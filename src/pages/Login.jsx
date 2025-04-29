@@ -19,7 +19,7 @@ function Login() {
             localStorage.setItem('user', JSON.stringify(response.data.user));
             dispatch(login(response.data.user));
             toast.success('Logged in successfully!');
-            navigate('/dashboard');
+            navigate('/');
         } catch (error) {
             console.error('Login error:', error);
             toast.error(error.response?.data?.error || 'Login failed');
@@ -28,6 +28,7 @@ function Login() {
 
     return (
         <div className="container mx-auto p-4">
+            <h1 className="text-2xl font-bold mb-4">Login</h1>
             <form onSubmit={handleLogin} className="max-w-md mx-auto space-y-4">
                 <input
                     type="email"

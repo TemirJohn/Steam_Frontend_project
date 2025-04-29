@@ -17,6 +17,7 @@ import Dashboard from './pages/Dashboard';
 import ManageUsers from './pages/ManageUsers';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import Profile from "./pages/Profile";
 
 function ProtectedRoute({ children, allowedRoles }) {
     const user = useSelector((state) => state.auth.user);
@@ -82,6 +83,14 @@ function App() {
                             }
                         />
                         <Route path="/dashboard" element={<Dashboard />} />
+                        <Route
+                            path="/profile"
+                            element={
+                                <ProtectedRoute allowedRoles={['user', 'admin', 'developer']}>
+                                    <Profile />
+                                </ProtectedRoute>
+                            }
+                        />
                     </Routes>
                     <ToastContainer />
                 </BrowserRouter>
