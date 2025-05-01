@@ -134,12 +134,6 @@ function ManageUsers() {
                             >
                                 Change Role
                             </button>
-                            <button
-                                onClick={() => openDeleteModal(u)}
-                                className="bg-red-500 text-white px-4 py-2 rounded"
-                            >
-                                Delete
-                            </button>
                         </div>
                     </li>
                 ))}
