@@ -123,7 +123,7 @@ function ManageUsers() {
                             ) : (
                                 <button
                                     onClick={() => handleBan(u.id)}
-                                    className="bg-yellow-500 text-white px-4 py-2 rounded"
+                                    className="bg-red-500 text-white px-4 py-2 rounded"
                                 >
                                     Ban
                                 </button>
@@ -177,7 +177,6 @@ function ManageUsers() {
                     onChange={(e) => setNewRole(e.target.value)}
                     className="border p-2 rounded w-full mb-4"
                 >
-                    <option value="">Select Role</option>
                     <option value="user">User</option>
                     <option value="admin">Admin</option>
                     <option value="developer">Developer</option>
