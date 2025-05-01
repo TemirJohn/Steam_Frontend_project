@@ -14,6 +14,7 @@ function EditGame() {
     const [name, setName] = useState('');
     const [price, setPrice] = useState('');
     const [description, setDescription] = useState('');
+    const [image, setImage] = useState(null); // 👈 новое состояние для картинки
 
     useEffect(() => {
         if (!user || (user.role !== 'admin' && user.role !== 'developer')) {
@@ -45,14 +46,16 @@ function EditGame() {
     const handleSave = async (e) => {
         e.preventDefault();
 
-        const updatedGame = {
-            name,
-            price: Number(price),
-            description,
-        };
+        const formData = new FormData();
+        formData.append('name', name);
+        formData.append('price', price);
+        formData.append('description', description);
+        if (image) formData.append('image', image); // 👈 добавляем картинку, если выбрана
 
         try {
-            const res = await axios.put(`/games/${id}`, updatedGame);
+            const res = await axios.put(`/games/${id}`, formData, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+            });
             dispatch(updateGame(res.data));
             toast.success('Game updated successfully!');
             navigate(`/games/${id}`);
@@ -101,6 +104,15 @@ function EditGame() {
                         className="border p-2 rounded w-full"
                     />
                 </label>
+                <label className="block">
+                    Image:
+                    <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => setImage(e.target.files[0])}
+                        className="border p-2 rounded w-full"
+                    />
+                </label>
                 <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded w-full">
                     Save
                 </button>
@@ -112,6 +124,7 @@ function EditGame() {
                     Cancel
                 </button>
             </form>
+
         </div>
     );
 }

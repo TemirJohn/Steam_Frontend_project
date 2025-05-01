@@ -132,7 +132,9 @@ function AddGame() {
                     Add Game
                 </button>
             </form>
+
         </div>
+
     );
 }
 

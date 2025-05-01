@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
@@ -10,6 +10,7 @@ function GameDetail() {
     const { id } = useParams();
     const [game, setGame] = useState(null);
     const [reviews, setReviews] = useState([]);
+    const [ownsGame, setOwnsGame] = useState(false); // 👈 состояние владения
     const user = useSelector((state) => state.auth.user);
 
     useEffect(() => {
@@ -26,23 +27,41 @@ function GameDetail() {
                 console.error('Error fetching reviews:', err);
                 toast.error('Failed to load reviews');
             });
-    }, [id]);
+
+        if (user) {
+            axios.get('/library')
+                .then((res) => {
+                    const hasGame = res.data.some((g) => g.id === Number(id));
+                    setOwnsGame(hasGame);
+                })
+                .catch((err) => {
+                    console.error('Error checking ownership:', err);
+                });
+        }
+    }, [id, user]);
 
     const handlePurchase = async () => {
-        if (!user) {
-            toast.error('Please log in to purchase');
-            return;
-        }
-
         try {
             await axios.post('/ownership', {
                 gameId: Number(id),
                 status: 'owned',
             });
+            setOwnsGame(true);
             toast.success('Game purchased successfully!');
         } catch (error) {
             console.error('Error purchasing game:', error);
             toast.error('Failed to purchase game');
+        }
+    };
+
+    const handleReturn = async () => {
+        try {
+            await axios.delete(`/ownership?gameId=${id}`);
+            setOwnsGame(false);
+            toast.success('Game returned successfully!');
+        } catch (error) {
+            console.error('Error returning game:', error);
+            toast.error('Failed to return game');
         }
     };
 
@@ -65,7 +84,7 @@ function GameDetail() {
         <div className="container mx-auto p-4">
             <h1 className="text-2xl font-bold mb-4">{game.name}</h1>
             <img
-                src={`http://localhost:8080/${game.image}`} // можешь заменить на `${process.env.REACT_APP_API_URL}/${game.image}` для продакшна
+                src={`http://localhost:8080/${game.image}`}
                 alt={game.name}
                 className="w-full h-64 object-cover mb-4"
             />
@@ -89,10 +108,12 @@ function GameDetail() {
 
             {user && user.role === 'user' && (
                 <button
-                    onClick={handlePurchase}
-                    className="bg-green-500 text-white px-4 py-2 rounded mb-4"
+                    onClick={ownsGame ? handleReturn : handlePurchase}
+                    className={`${
+                        ownsGame ? 'bg-yellow-500' : 'bg-green-500'
+                    } text-white px-4 py-2 rounded mb-4`}
                 >
-                    Buy Now
+                    {ownsGame ? 'Return Game' : 'Buy Now'}
                 </button>
             )}
 
@@ -108,6 +129,7 @@ function GameDetail() {
             {user && (
                 <ReviewForm gameId={Number(id)} onReviewAdded={handleReviewAdded} />
             )}
+
         </div>
     );
 }

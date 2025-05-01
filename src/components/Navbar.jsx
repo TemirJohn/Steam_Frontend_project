@@ -73,8 +73,10 @@ function Navbar() {
                     </>
                 ) : (
                     <>
-                        <Link to="/login" className="hover:underline">Login</Link>
-                        <Link to="/register" className="hover:underline">Register</Link>
+                        <div className="flex items-center space-x-4">
+                            <Link to="/login" className="hover:underline">Login</Link>
+                            <Link to="/register" className="hover:underline">Register</Link>
+                        </div>
                     </>
                 )}
             </div>

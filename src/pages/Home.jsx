@@ -10,6 +10,7 @@ function Home() {
     const [games, setGames] = useState([]);
     const [ownedGames, setOwnedGames] = useState([]);
     const [searchParams, setSearchParams] = useSearchParams();
+    const [categories, setCategories] = useState([]);
     const categoryFilter = searchParams.get('category') || 'all';
 
     useEffect(() => {
@@ -29,6 +30,15 @@ function Home() {
         }
     }, [user, categoryFilter]);
 
+    useEffect(() => {
+        axios.get('/categories')
+            .then((res) => setCategories(res.data))
+            .catch((err) => {
+                console.error('Error fetching categories:', err);
+                toast.error('Failed to load categories');
+            });
+    }, []);
+
     return (
         <div className="container mx-auto p-4">
             <h1 className="text-2xl font-bold mb-4">Welcome to SteamLite</h1>
@@ -40,37 +50,29 @@ function Home() {
                 <p className="mb-4">Please log in to access more features.</p>
             )}
             <h2 className="text-xl font-semibold mb-2">Games</h2>
-            <div className="mb-4 space-x-2">
+            <div className="mb-4 space-x-2 flex flex-wrap gap-2">
                 <button
                     onClick={() => setSearchParams({})}
                     className="bg-gray-200 px-4 py-2 rounded"
                 >
                     All
                 </button>
-                <button
-                    onClick={() => setSearchParams({ category: '1' })}
-                    className="bg-gray-200 px-4 py-2 rounded"
-                >
-                    Action
-                </button>
-                <button
-                    onClick={() => setSearchParams({ category: '2' })}
-                    className="bg-gray-200 px-4 py-2 rounded"
-                >
-                    RPG
-                </button>
-                <button
-                    onClick={() => setSearchParams({ category: '3' })}
-                    className="bg-gray-200 px-4 py-2 rounded"
-                >
-                    Strategy
-                </button>
+                {categories.map((cat) => (
+                    <button
+                        key={cat.id}
+                        onClick={() => setSearchParams({ category: `${cat.id}` })}
+                        className="bg-gray-200 px-4 py-2 rounded"
+                    >
+                        {cat.name}
+                    </button>
+                ))}
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {games.map((game) => (
                     <GameCard key={game.id} game={game} />
                 ))}
             </div>
+
         </div>
     );
 }

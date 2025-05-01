@@ -7,20 +7,25 @@ function Register() {
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [avatar, setAvatar] = useState(null); // 👈 новое состояние
     const navigate = useNavigate();
 
     async function handleRegister(e) {
         e.preventDefault();
 
-        try {
-            const newUser = {
-                username,
-                email,
-                password,
-                role: 'user',
-            };
+        const formData = new FormData();
+        formData.append('username', username);
+        formData.append('email', email);
+        formData.append('password', password);
+        formData.append('role', 'user');
+        if (avatar) {
+            formData.append('avatar', avatar); // 👈 аватарка
+        }
 
-            await axios.post('http://localhost:8080/users', newUser);
+        try {
+            await axios.post('http://localhost:8080/users', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+            });
             toast.success('Registered successfully! Please log in.');
             navigate('/login');
         } catch (error) {
@@ -56,6 +61,12 @@ function Register() {
                     onChange={(e) => setPassword(e.target.value)}
                     className="border p-2 rounded w-full"
                     required
+                />
+                <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setAvatar(e.target.files[0])}
+                    className="border p-2 rounded w-full"
                 />
                 <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded w-full">
                     Register

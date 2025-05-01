@@ -10,7 +10,6 @@ import GameDetail from './pages/GameDetail';
 import AddGame from './pages/AddGame';
 import EditGame from './pages/EditGame';
 import DeleteCard from './pages/DeleteCard';
-import Library from './pages/Library';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
@@ -18,6 +17,7 @@ import ManageUsers from './pages/ManageUsers';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Profile from "./pages/Profile";
+import Footer from "./pages/Footer";
 
 function ProtectedRoute({ children, allowedRoles }) {
     const user = useSelector((state) => state.auth.user);
@@ -74,14 +74,7 @@ function App() {
                                 </ProtectedRoute>
                             }
                         />
-                        <Route
-                            path="/library"
-                            element={
-                                <ProtectedRoute allowedRoles={['user']}>
-                                    <Library />
-                                </ProtectedRoute>
-                            }
-                        />
+
                         <Route path="/dashboard" element={<Dashboard />} />
                         <Route
                             path="/profile"
@@ -93,6 +86,7 @@ function App() {
                         />
                     </Routes>
                     <ToastContainer />
+
                 </BrowserRouter>
             </PersistGate>
         </Provider>

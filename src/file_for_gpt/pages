@@ -1,106 +1,105 @@
-import axios from 'src/pages/utils/axios';
+import axios from 'axios';
 
 const instance = axios.create({
-    baseURL: process.env.REACT_APP_API_URL || 'http://localhost:8080',
+    baseURL: 'http://localhost:8080',
 });
 
-instance.interceptors.request.use((config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+instance.interceptors.request.use(
+    (config) => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            config.headers['Authorization'] = `Bearer ${token}`;
+        }
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
     }
-    return config;
-});
+);
 
 export default instance;
 
 import { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../utils/axiosConfig';
 import { addGame } from '../redux/gameReducer';
 import { toast } from 'react-toastify';
 
 function AddGame() {
-    const [formData, setFormData] = useState({
-        name: '',
-        description: '',
-        price: '',
-        category_id: '',
-        image: null,
-    });
-
+    const [name, setName] = useState('');
+    const [price, setPrice] = useState('');
+    const [description, setDescription] = useState('');
+    const [categoryId, setCategoryId] = useState('');
+    const [image, setImage] = useState(null);
+    const [categories, setCategories] = useState([]);
     const user = useSelector((state) => state.auth.user);
     const dispatch = useDispatch();
     const navigate = useNavigate();
-    const [categories, setCategories] = useState([]);
-
-    useEffect(() => {
-        const fetchCategories = async () => {
-            try {
-                const response = await axios.get('http://localhost:8080/categories');
-                setCategories(response.data);
-            } catch (error) {
-                console.error('Error fetching categories:', error);
-                toast.error('Failed to load categories');
-            }
-        };
-        fetchCategories();
-    }, []);
 
     useEffect(() => {
         if (!user || (user.role !== 'admin' && user.role !== 'developer')) {
-            toast.error('Access denied! Only admins and developers can add games.');
-            navigate('/dashboard');
+            toast.error('Access denied');
+            navigate('/login');
+            return;
         }
-    }, [user, navigate]);
 
-    const handleChange = (e) => {
-        const { name, value, files } = e.target;
-        if (files) {
-            setFormData({ ...formData, [name]: files[0] });
-        } else {
-            setFormData({ ...formData, [name]: value });
-        }
-    };
+        axios.get('http://localhost:8080/categories')
+            .then((res) => setCategories(res.data))
+            .catch((err) => {
+                console.error('Error fetching categories:', err);
+                if (err.response?.status === 401) {
+                    toast.error('Unauthorized: Please log in again');
+                    navigate('/login');
+                } else {
+                    toast.error('Failed to load categories');
+                }
+            });
+    }, [user, navigate]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!formData.category_id) {
-            toast.error('Please select a category');
+        if (!image) {
+            toast.error('Please select an image');
             return;
         }
-        if (!formData.image) {
-            toast.error('Please upload an image');
-            return;
-        }
+
+        const formData = new FormData();
+        formData.append('name', name);
+        formData.append('price', price);
+        formData.append('description', description);
+        formData.append('category_id', categoryId);
+        formData.append('image', image);
+        formData.append('developerId', user.id); // Добавляем developerId
+
         try {
-            const data = new FormData();
-            for (let key in formData) {
-                data.append(key, formData[key]);
-            }
-            const response = await axios.post('http://localhost:8080/games', data);
-            dispatch(addGame(response.data));
+            const res = await axios.post('/games', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+            });
+            dispatch(addGame(res.data));
             toast.success('Game added successfully!');
             navigate('/dashboard');
         } catch (error) {
-            const errorMessage = error.response?.data?.message || 'Error adding game';
             console.error('Error adding game:', error);
-            toast.error(errorMessage);
+            if (error.response?.status === 401) {
+                toast.error('Unauthorized: Please log in again');
+                navigate('/login');
+            } else {
+                toast.error('Failed to add game');
+            }
         }
     };
 
     return (
         <div className="container mx-auto p-4">
-            <h1 className="text-2xl font-bold mb-4">Add Game (Admins Only)</h1>
+            <h1 className="text-2xl font-bold mb-4">Add New Game</h1>
             <form onSubmit={handleSubmit} className="max-w-md mx-auto space-y-4">
                 <label className="block">
                     Name:
                     <input
                         type="text"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleChange}
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
                         className="border p-2 rounded w-full"
                         required
                     />
@@ -110,9 +109,8 @@ function AddGame() {
                     <input
                         type="number"
                         step="0.01"
-                        name="price"
-                        value={formData.price}
-                        onChange={handleChange}
+                        value={price}
+                        onChange={(e) => setPrice(e.target.value)}
                         className="border p-2 rounded w-full"
                         required
                     />
@@ -120,20 +118,20 @@ function AddGame() {
                 <label className="block">
                     Description:
                     <textarea
-                        name="description"
-                        value={formData.description}
-                        onChange={handleChange}
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
                         className="border p-2 rounded w-full"
                     />
                 </label>
                 <label className="block">
                     Category:
                     <select
-                        name="category_id"
-                        value={formData.category_id}
-                        onChange={handleChange}
+                        value={categoryId}
+                        onChange={(e) => setCategoryId(e.target.value)}
                         className="border p-2 rounded w-full"
+                        required
                     >
+                        <option value="">Select a category</option>
                         {categories.map((cat) => (
                             <option key={cat.id} value={cat.id}>
                                 {cat.name}
@@ -145,10 +143,10 @@ function AddGame() {
                     Image:
                     <input
                         type="file"
-                        name="image"
                         accept="image/*"
-                        onChange={handleChange}
+                        onChange={(e) => setImage(e.target.files[0])}
                         className="border p-2 rounded w-full"
+                        required
                     />
                 </label>
                 <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded w-full">
@@ -168,112 +166,151 @@ function Dashboard() {
     const user = useSelector((state) => state.auth.user);
 
     return (
-        <div className="container">
-            <h1>Dashboard</h1>
+        <div className="max-w-3xl mx-auto mt-10 p-6 bg-white shadow-lg rounded-lg">
+            <h1 className="text-3xl font-bold mb-6 text-gray-800">Admin Dashboard</h1>
 
-            {user && user.role === 'admin' && (
-                <Link to="/manage-users">
-                    <button className="btn btn-blue">Manage Users</button>
-                </Link>
-            )}
+            <p className="text-gray-600 mb-6">
+                Welcome, <span className="font-semibold text-blue-600">{user?.name}</span>!
+                You are logged in as <strong>{user?.role}</strong>.
+            </p>
 
-            {user && (user.role === 'developer' || user.role === 'admin') && (
-                <Link to="/add-game">
-                    <button className="btn btn-blue">Add Game</button>
-                </Link>
-            )}
+            <div className="flex flex-col sm:flex-row gap-4">
+                {user && user.role === 'admin' && (
+                    <Link to="/manage-users" className="w-full sm:w-auto">
+                        <button className="w-full bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded transition">
+                            Manage Users
+                        </button>
+                    </Link>
+                )}
+
+                {user && (user.role === 'developer' || user.role === 'admin') && (
+                    <Link to="/add-game" className="w-full sm:w-auto">
+                        <button className="w-full bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded transition">
+                            Add Game
+                        </button>
+                    </Link>
+                )}
+            </div>
         </div>
     );
 }
 
 export default Dashboard;
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { logout } from '../redux/authReducer';
+import { deleteGame } from '../redux/gameReducer';
+import axios from '../utils/axiosConfig';
+import Modal from 'react-modal';
 import { toast } from 'react-toastify';
 
+Modal.setAppElement('#root');
 
 function DeleteCard() {
     const { id } = useParams();
     const [game, setGame] = useState(null);
+    const [modalIsOpen, setModalIsOpen] = useState(false);
     const user = useSelector((state) => state.auth.user);
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
     useEffect(() => {
-        if (!user || (user.role !== 'admin' && user.role !== 'developer')) {
-            toast.error('Access denied! Only developers can delete games.');
-            dispatch(logout());
-            navigate('/login');
+        if (!user) return;
+
+        if (user.role !== 'admin' && user.role !== 'developer') {
+            toast.error('Access denied!');
+            navigate('/dashboard');
             return;
         }
 
-        fetch(`http://localhost:8080/games/${id}`)
+        axios.get(`/games/${id}`)
             .then((res) => {
-                if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
-                return res.text();
-            })
-            .then((text) => {
-                const data = JSON.parse(text);
+                const data = res.data;
                 if (user.role === 'developer' && data.developerId !== user.id) {
                     toast.error('You can only delete your own games.');
                     navigate('/dashboard');
                 } else {
                     setGame(data);
+                    setModalIsOpen(true);
                 }
             })
-            .catch((error) => console.error('Error fetching game:', error));
+            .catch((error) => {
+                console.error('Error fetching game:', error);
+                toast.error('Failed to load game');
+                navigate('/dashboard');
+            });
     }, [id, user, dispatch, navigate]);
 
-    async function handleDelete() {
+    const handleDelete = async () => {
         try {
-            const response = await fetch(`http://localhost:8080/games/${id}`, {
-                method: 'DELETE',
-            });
-            if (response.ok) {
-                toast.success('Game deleted successfully!');
-                navigate('/dashboard');
-            } else {
-                throw new Error('Failed to delete game');
-            }
+            await axios.delete(`/games/${id}`);
+            dispatch(deleteGame(Number(id)));
+            toast.success('Game deleted successfully!');
+            navigate('/dashboard');
         } catch (error) {
             console.error('Error deleting game:', error);
-            toast.error('Error deleting game. Check console for details');
+            toast.error('Failed to delete game');
         }
-    }
+    };
 
-    if (!game) return <div>Loading...</div>;
+    const handleCancel = () => {
+        setModalIsOpen(false);
+        setTimeout(() => navigate('/dashboard'), 200);
+    };
+
+    if (!game) return (
+        <div className="flex justify-center items-center h-screen">
+            <p className="text-gray-600 text-xl">Loading game...</p>
+        </div>
+    );
 
     return (
-        <div className="container">
-            <h1>Delete Game</h1>
-            <p>Are you sure you want to delete "{game.title}"?</p>
-            <p>This action cannot be undone.</p>
-            <button onClick={handleDelete} className="btn btn-red">Confirm Delete</button>
-            <button onClick={() => navigate('/dashboard')} className="btn btn-gray">Cancel</button>
-        </div>
+        <Modal
+            isOpen={modalIsOpen}
+            onRequestClose={handleCancel}
+            className="bg-white p-6 rounded shadow-lg max-w-md mx-auto mt-20"
+            overlayClassName="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center"
+        >
+            <h2 className="text-2xl font-bold mb-4">Delete Game</h2>
+            <p className="mb-2">Are you sure you want to delete <strong>{game.name}</strong>?</p>
+            <p className="text-gray-600 mb-6">This action cannot be undone.</p>
+
+            <div className="flex justify-end gap-4">
+                <button
+                    onClick={handleDelete}
+                    className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded transition"
+                >
+                    Confirm Delete
+                </button>
+                <button
+                    onClick={handleCancel}
+                    className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded transition"
+                >
+                    Cancel
+                </button>
+            </div>
+        </Modal>
     );
 }
 
 export default DeleteCard;
 
-// src/pages/EditGame.jsx
+
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import axios from '../utils/axiosConfig';
+import { updateGame } from '../redux/gameReducer';
 import { toast } from 'react-toastify';
-
-
 
 function EditGame() {
     const { id } = useParams();
     const navigate = useNavigate();
+    const dispatch = useDispatch();
     const user = useSelector((state) => state.auth.user);
-
     const [game, setGame] = useState(null);
-    const [title, setTitle] = useState('');
+    const [name, setName] = useState('');
     const [price, setPrice] = useState('');
     const [description, setDescription] = useState('');
 
@@ -285,84 +322,94 @@ function EditGame() {
     }, [user, navigate]);
 
     useEffect(() => {
-        fetch(`http://localhost:8080/games/${id}`)
-            .then(res => res.json())
-            .then(data => {
-                setGame(data);
-                setTitle(data.title);
-                setPrice(data.price);
-                setDescription(data.description);
-            });
-
-        fetch(`http://localhost:8080/games/${id}`)
+        axios.get(`/games/${id}`)
             .then((res) => {
-                if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
-                return res.text();
-            })
-            .then((text) => {
-                console.log('Raw game response:', text);
-                const data = JSON.parse(text);
+                const data = res.data;
                 if (user.role === 'developer' && data.developerId !== user.id) {
                     toast.error('You can only edit your own games.');
                     navigate('/dashboard');
                 } else {
                     setGame(data);
+                    setName(data.name);
+                    setPrice(data.price);
+                    setDescription(data.description);
                 }
             })
-            .catch((error) => console.error('Error fetching game:', error));
-
+            .catch((error) => {
+                console.error('Error fetching game:', error);
+                toast.error('Failed to load game');
+            });
     }, [id, user, navigate]);
-
-
 
     const handleSave = async (e) => {
         e.preventDefault();
 
         const updatedGame = {
-            ...game,
-            title,
+            name,
             price: Number(price),
-            description
+            description,
         };
 
         try {
-            const res = await fetch(`http://localhost:8080/games/${id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(updatedGame),
-            });
-
-            if (res.ok) {
-                toast.success('Game updated successfully!');
-                navigate(`/games/${id}`);
-            } else {
-                toast.error('Failed to update game');
-            }
+            const res = await axios.put(`/games/${id}`, updatedGame);
+            dispatch(updateGame(res.data));
+            toast.success('Game updated successfully!');
+            navigate(`/games/${id}`);
         } catch (error) {
             console.error('Error:', error);
+            toast.error('Failed to update game');
         }
     };
 
-    if (!game) return <div>Loading...</div>;
+    if (!game) return (
+        <div className="flex justify-center items-center h-screen">
+            <p className="text-gray-600 text-xl">Loading game data...</p>
+        </div>
+    );
 
     return (
-        <div className="container">
-            <h1 >Edit Game</h1>
-            <form onSubmit={handleSave}>
-                <label>
-                    Title:
-                    <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} />
+        <div className="container mx-auto p-4">
+            <h1 className="text-2xl font-bold mb-4">Edit Game</h1>
+            <form onSubmit={handleSave} className="max-w-md mx-auto space-y-4">
+                <label className="block">
+                    Name:
+                    <input
+                        type="text"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        className="border p-2 rounded w-full"
+                        required
+                    />
                 </label>
-                <label>
+                <label className="block">
                     Price:
-                    <input type="number" value={price} onChange={(e) => setPrice(e.target.value)} />
+                    <input
+                        type="number"
+                        step="0.01"
+                        value={price}
+                        onChange={(e) => setPrice(e.target.value)}
+                        className="border p-2 rounded w-full"
+                        required
+                    />
                 </label>
-                <label>
+                <label className="block">
                     Description:
-                    <textarea value={description} onChange={(e) => setDescription(e.target.value)} />
+                    <textarea
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        className="border p-2 rounded w-full"
+                    />
                 </label>
-                <button type="submit" className="btn btn-blue">Save</button>
-                <button type="button" className="btn btn-grey" onClick={() => navigate(-1)}>Cancel</button>
+                <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded w-full">
+                    Save
+                </button>
+                <button
+                    type="button"
+                    className="bg-gray-500 text-white px-4 py-2 rounded w-full"
+                    onClick={() => navigate(-1)}
+                >
+                    Cancel
+                </button>
             </form>
         </div>
     );
@@ -370,96 +417,134 @@ function EditGame() {
 
 export default EditGame;
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
+import axios from '../utils/axiosConfig';
 import ReviewForm from '../components/ReviewForm';
+import { toast } from 'react-toastify';
 
 function GameDetail() {
     const { id } = useParams();
     const [game, setGame] = useState(null);
     const [reviews, setReviews] = useState([]);
+    const [ownsGame, setOwnsGame] = useState(false); // 👈 состояние владения
     const user = useSelector((state) => state.auth.user);
 
     useEffect(() => {
-        fetch(`http://localhost:8080/games/${id}`)
-            .then((res) => res.json())
-            .then((data) => setGame(data));
-        fetch(`http://localhost:8080/reviews?gameId=${id}`)
-            .then((res) => res.json())
-            .then((data) => setReviews(data));
-    }, [id]);
-
-    async function handlePurchase() {
-        if (!user) {
-            alert('Please log in to purchase');
-            return;
-        }
-
-        const purchase = {
-            userId: user.id,
-            gameId: Number(id),
-            purchaseDate: new Date().toISOString().split('T')[0],
-        };
-
-        try {
-            const response = await fetch('http://localhost:8080/purchases', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(purchase),
+        axios.get(`/games/${id}`)
+            .then((res) => setGame(res.data))
+            .catch((err) => {
+                console.error('Error fetching game:', err);
+                toast.error('Failed to load game');
             });
-            if (response.ok) {
-                alert('Game purchased successfully!');
-            }
+
+        axios.get(`/reviews?gameId=${id}`)
+            .then((res) => setReviews(res.data))
+            .catch((err) => {
+                console.error('Error fetching reviews:', err);
+                toast.error('Failed to load reviews');
+            });
+
+        if (user) {
+            axios.get('/library')
+                .then((res) => {
+                    const hasGame = res.data.some((g) => g.id === Number(id));
+                    setOwnsGame(hasGame);
+                })
+                .catch((err) => {
+                    console.error('Error checking ownership:', err);
+                });
+        }
+    }, [id, user]);
+
+    const handlePurchase = async () => {
+        try {
+            await axios.post('/ownership', {
+                gameId: Number(id),
+                status: 'owned',
+            });
+            setOwnsGame(true);
+            toast.success('Game purchased successfully!');
         } catch (error) {
             console.error('Error purchasing game:', error);
+            toast.error('Failed to purchase game');
         }
-    }
-
-    if (!game) return <div>Loading...</div>;
-
-    const handleReviewAdded = () => {
-        fetch(`http://localhost:8080/reviews?gameId=${id}`)
-            .then((res) => res.json())
-            .then((data) => setReviews(data));
     };
 
-    const isEditor = user && (user.role === 'admin' || user.role === 'developer');
+    const handleReturn = async () => {
+        try {
+            await axios.delete(`/ownership?gameId=${id}`);
+            setOwnsGame(false);
+            toast.success('Game returned successfully!');
+        } catch (error) {
+            console.error('Error returning game:', error);
+            toast.error('Failed to return game');
+        }
+    };
+
+    const handleReviewAdded = () => {
+        axios.get(`/reviews?gameId=${id}`)
+            .then((res) => setReviews(res.data))
+            .catch((err) => {
+                console.error('Error fetching reviews:', err);
+                toast.error('Failed to load reviews');
+            });
+    };
 
     if (!game) return <div>Loading...</div>;
 
+    const isEditor =
+        user &&
+        (user.role === 'admin' || (user.role === 'developer' && user.id === game.developerId));
+
     return (
-        <div className="container">
-            <h1>{game.title}</h1>
-            <p>${game.price}</p>
-            <p>{game.description}</p>
+        <div className="container mx-auto p-4">
+            <h1 className="text-2xl font-bold mb-4">{game.name}</h1>
+            <img
+                src={`http://localhost:8080/${game.image}`}
+                alt={game.name}
+                className="w-full h-64 object-cover mb-4"
+            />
+            <p className="text-lg mb-2">${game.price.toFixed(2)}</p>
+            <p className="text-gray-600 mb-4">{game.description}</p>
+
             {isEditor && (
-                <>
+                <div className="mb-4">
                     <Link to={`/games/${id}/edit`}>
-                        <button className="btn btn-blue">Edit Game</button>
+                        <button className="bg-blue-500 text-white px-4 py-2 rounded mr-2">
+                            Edit Game
+                        </button>
                     </Link>
                     <Link to={`/delete-game/${id}`}>
-                        <button className="btn btn-red">Delete Game</button>
+                        <button className="bg-red-500 text-white px-4 py-2 rounded">
+                            Delete Game
+                        </button>
                     </Link>
-                </>
+                </div>
             )}
+
             {user && user.role === 'user' && (
                 <button
-                    onClick={handlePurchase}
-                    className="btn btn-green"
+                    onClick={ownsGame ? handleReturn : handlePurchase}
+                    className={`${
+                        ownsGame ? 'bg-yellow-500' : 'bg-green-500'
+                    } text-white px-4 py-2 rounded mb-4`}
                 >
-                    Buy Now
+                    {ownsGame ? 'Return Game' : 'Buy Now'}
                 </button>
             )}
-            <h2>Reviews</h2>
-            <ul>
+
+            <h2 className="text-xl font-semibold mb-2">Reviews</h2>
+            <ul className="mb-4">
                 {reviews.map((review) => (
-                    <li key={review.id}>
+                    <li key={review.id} className="border-b py-2">
                         Rating: {review.rating}/5 - {review.comment}
                     </li>
                 ))}
             </ul>
+
             {user && (
                 <ReviewForm gameId={Number(id)} onReviewAdded={handleReviewAdded} />
             )}
@@ -473,6 +558,7 @@ import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useSearchParams } from 'react-router-dom';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 function Games() {
     const [games, setGames] = useState([]);
@@ -485,21 +571,23 @@ function Games() {
         axios
             .get(url)
             .then((res) => setGames(res.data))
-            .catch((err) => console.error('Error fetching games:', err));
+            .catch((err) => {
+                console.error('Error fetching games:', err);
+                toast.error('Failed to load games');
+            });
     }, [categoryId]);
 
     const handleBuy = async (gameId) => {
-        if (!user) return alert('Please log in to buy games.');
+        if (!user) {
+            toast.error('Please log in to buy games.');
+            return;
+        }
         try {
-            await axios.post(
-                '/ownership',
-                { gameId, status: 'owned' },
-                { headers: { 'User-ID': user.id } }
-            );
-            alert('Game purchased!');
+            await axios.post('/ownership', { gameId, status: 'owned' });
+            toast.success('Game purchased!');
         } catch (error) {
             console.error('Error purchasing game:', error);
-            alert('Failed to purchase game');
+            toast.error('Failed to purchase game');
         }
     };
 
@@ -529,6 +617,7 @@ function Games() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {games.map((game) => (
                     <div key={game.id} className="p-4 bg-gray-100 rounded shadow">
+                        <img src={`http://localhost:8080/${game.image}`} alt={game.name} className="w-full h-48 object-cover mb-2" />
                         <h3 className="text-lg font-semibold">{game.name}</h3>
                         <p>${game.price.toFixed(2)}</p>
                         <p className="text-gray-600">{game.description}</p>
@@ -550,69 +639,75 @@ function Games() {
 export default Games;
 
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import axios from 'axios';
+import { useSearchParams } from 'react-router-dom';
+import axios from '../utils/axiosConfig';
 import GameCard from '../components/GameCard';
+import { toast } from 'react-toastify';
 
 function Home() {
     const user = useSelector((state) => state.auth.user);
     const [games, setGames] = useState([]);
     const [ownedGames, setOwnedGames] = useState([]);
     const [searchParams, setSearchParams] = useSearchParams();
+    const [categories, setCategories] = useState([]);
     const categoryFilter = searchParams.get('category') || 'all';
 
+    useEffect(() => {
+        axios.get(`/games?categoryId=${categoryFilter === 'all' ? '' : categoryFilter}`)
+            .then((res) => setGames(res.data))
+            .catch((err) => {
+                console.error('Error fetching games:', err);
+                toast.error('Failed to load games');
+            });
+        if (user) {
+            axios.get('/library')
+                .then((res) => setOwnedGames(res.data))
+                .catch((err) => {
+                    console.error('Error fetching library:', err);
+                    toast.error('Failed to load library');
+                });
+        }
+    }, [user, categoryFilter]);
 
     useEffect(() => {
-        if (user) {
-            axios
-                .get(`/games`, {
-                    headers: { "User-ID": user.id },
-                })
-                .then((res) => setOwnedGames(res.data));
-        }
-    }, [user]);
+        axios.get('/categories')
+            .then((res) => setCategories(res.data))
+            .catch((err) => {
+                console.error('Error fetching categories:', err);
+                toast.error('Failed to load categories');
+            });
+    }, []);
 
     return (
-        <div className="container">
-            <h1>Welcome to SteamLite</h1>
+        <div className="container mx-auto p-4">
+            <h1 className="text-2xl font-bold mb-4">Welcome to SteamLite</h1>
             {user ? (
-                <p>
-                    Hello, {user.username}! You are logged in as <strong>{user.role}</strong>.
+                <p className="mb-4">
+                    Hello, {user.name}! You are logged in as <strong>{user.role}</strong>.
                 </p>
             ) : (
-                <p>Please log in to access more features.</p>
+                <p className="mb-4">Please log in to access more features.</p>
             )}
-            <h2>Games</h2>
-            <button
-                onClick={() => setSearchParams({})}
-                className="btn btn-gray"
-            >
-                All
-            </button>
-            <button
-                onClick={() => setSearchParams({ category: '1' })}
-                className="btn btn-gray"
-            >
-                Action
-            </button>
-            <button
-                onClick={() => setSearchParams({ category: '2' })}
-                className="btn btn-gray"
-            >
-                RPG
-            </button>
-            <button
-                onClick={() => setSearchParams({ category: '3' })}
-                className="btn btn-gray"
-            >
-                Strategy
-            </button>
-
-            <br/>
-            <br/>
-
-            <div className="grid">
+            <h2 className="text-xl font-semibold mb-2">Games</h2>
+            <div className="mb-4 space-x-2 flex flex-wrap gap-2">
+                <button
+                    onClick={() => setSearchParams({})}
+                    className="bg-gray-200 px-4 py-2 rounded"
+                >
+                    All
+                </button>
+                {categories.map((cat) => (
+                    <button
+                        key={cat.id}
+                        onClick={() => setSearchParams({ category: `${cat.id}` })}
+                        className="bg-gray-200 px-4 py-2 rounded"
+                    >
+                        {cat.name}
+                    </button>
+                ))}
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {games.map((game) => (
                     <GameCard key={game.id} game={game} />
                 ))}
@@ -623,57 +718,12 @@ function Home() {
 
 export default Home;
 
-import { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
-import axios from 'axios';
-
-function Library() {
-    const [ownedGames, setOwnedGames] = useState([]);
-    const user = useSelector((state) => state.auth.user);
-
-    useEffect(() => {
-        if (user) {
-            axios
-                .get('/library')
-                .then((res) => setOwnedGames(res.data))
-                .catch((err) => console.error('Error fetching library:', err));
-        }
-    }, [user]);
-
-    if (!user) {
-        return <div>Please log in to view your library.</div>;
-    }
-
-
-    return (
-        <div className="container mx-auto p-4">
-            <h1 className="text-2xl font-bold mb-4">My Library</h1>
-            {!user ? (
-                <p>Please log in to view your library.</p>
-            ) : ownedGames.length === 0 ? (
-                <p>No games in your library yet.</p>
-            ) : (
-                <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {ownedGames.map((game) => (
-                        <li key={game.id} className="p-4 bg-gray-100 rounded shadow">
-                            <h3 className="text-lg font-semibold">{game.name}</h3>
-                            <p>${game.price.toFixed(2)}</p>
-                            <p className="text-gray-600">{game.description}</p>
-                        </li>
-                    ))}
-                </ul>
-            )}
-        </div>
-    );
-}
-
-export default Library;
-
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { login } from '../redux/authReducer';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 function Login() {
     const dispatch = useDispatch();
@@ -686,16 +736,19 @@ function Login() {
         try {
             const response = await axios.post('http://localhost:8080/login', { email, password });
             localStorage.setItem('token', response.data.token);
+            localStorage.setItem('user', JSON.stringify(response.data.user));
             dispatch(login(response.data.user));
-            navigate('/dashboard');
+            toast.success('Logged in successfully!');
+            navigate('/');
         } catch (error) {
             console.error('Login error:', error);
-            alert(error.response?.data?.error || 'Login failed');
+            toast.error(error.response?.data?.error || 'Login failed');
         }
     }
 
     return (
         <div className="container mx-auto p-4">
+            <h1 className="text-2xl font-bold mb-4">Login</h1>
             <form onSubmit={handleLogin} className="max-w-md mx-auto space-y-4">
                 <input
                     type="email"
@@ -724,106 +777,257 @@ function Login() {
 export default Login;
 
 import { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import { logout } from '../redux/authReducer';
+import axios from '../utils/axiosConfig';
+import Modal from 'react-modal';
+import { toast } from 'react-toastify';
+
+Modal.setAppElement('#root');
 
 function ManageUsers() {
-    const dispatch = useDispatch();
     const navigate = useNavigate();
     const user = useSelector((state) => state.auth.user);
     const [users, setUsers] = useState([]);
+    const [modalIsOpen, setModalIsOpen] = useState(false);
+    const [userToDelete, setUserToDelete] = useState(null);
 
     useEffect(() => {
         if (!user || user.role !== 'admin') {
-            alert('Access denied! Only admins can manage users.');
-            dispatch(logout());
+            toast.error('Access denied! Only admins can manage users.');
             navigate('/login');
         }
-    }, [user, navigate, dispatch]);
+    }, [user, navigate]);
 
     useEffect(() => {
-        fetch('http://localhost:8080/users')
-            .then((res) => res.json())
-            .then((data) => setUsers(data))
-            .catch((error) => console.error('Error fetching users:', error));
+        axios.get('http://localhost:8080/users')
+            .then((res) => setUsers(res.data))
+            .catch((error) => {
+                console.error('Error fetching users:', error);
+                toast.error('Failed to load users');
+            });
     }, []);
 
-    async function handleDelete(id) {
+    async function handleDelete() {
         try {
-            const response = await fetch(`http://localhost:8080/users/${id}`, {
-                method: 'DELETE',
-            });
-            if (response.ok) {
-                setUsers(users.filter((u) => u.id !== id));
-            }
+            await axios.delete(`http://localhost:8080/users/${userToDelete.id}`);
+            setUsers(users.filter((u) => u.id !== userToDelete.id));
+            toast.success('User deleted successfully!');
         } catch (error) {
             console.error('Error deleting user:', error);
+            toast.error('Failed to delete user');
         }
+        setModalIsOpen(false);
     }
 
+    const openModal = (user) => {
+        setUserToDelete(user);
+        setModalIsOpen(true);
+    };
+
     return (
-        <div className="container">
-            <h1>Manage Users (Admins Only)</h1>
-            <ul>
+        <div className="container mx-auto p-4">
+            <h1 className="text-2xl font-bold mb-4">Manage Users (Admins Only)</h1>
+            <ul className="space-y-2">
                 {users.map((u) => (
-                    <li key={u.id}>
-                        <span>{u.username} - {u.role} - {u.email}</span>
+                    <li key={u.id} className="flex justify-between items-center border-b py-2">
+                        <span>{u.name} - {u.role} - {u.email}</span>
                         <button
-                            onClick={() => handleDelete(u.id)}
-                            className="btn btn-red"
+                            onClick={() => openModal(u)}
+                            className="bg-red-500 text-white px-4 py-2 rounded"
                         >
                             Delete
                         </button>
                     </li>
                 ))}
             </ul>
+            <Modal
+                isOpen={modalIsOpen}
+                onRequestClose={() => setModalIsOpen(false)}
+                className="bg-white p-6 rounded shadow-lg max-w-md mx-auto mt-20"
+                overlayClassName="fixed inset-0 bg-black bg-opacity-50"
+            >
+                <h2 className="text-xl font-semibold mb-4">Confirm Deletion</h2>
+                <p>Are you sure you want to delete {userToDelete?.name}?</p>
+                <div className="mt-4 flex justify-end space-x-2">
+                    <button
+                        onClick={handleDelete}
+                        className="bg-red-500 text-white px-4 py-2 rounded"
+                    >
+                        Yes, Delete
+                    </button>
+                    <button
+                        onClick={() => setModalIsOpen(false)}
+                        className="bg-gray-500 text-white px-4 py-2 rounded"
+                    >
+                        Cancel
+                    </button>
+                </div>
+            </Modal>
         </div>
     );
 }
 
 export default ManageUsers;
 
+import { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
+import axios from '../utils/axiosConfig';
+import { Link } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import { useDispatch } from 'react-redux';
+import { setUser } from '../redux/authReducer';
+
+function Profile() {
+    const user = useSelector((state) => state.auth.user);
+    const [library, setLibrary] = useState([]);
+    const [avatar, setAvatar] = useState(null);
+    const dispatch = useDispatch();
+
+    useEffect(() => {
+        if (!user) return;
+
+        axios.get('/library')
+            .then((res) => {
+                setLibrary(res.data || []);
+            })
+            .catch((err) => {
+                console.error('Error fetching library:', err);
+                toast.error('Failed to load your games');
+            });
+    }, [user]);
+
+    if (!user) {
+        return (
+            <div className="flex justify-center items-center h-screen">
+                <p className="text-gray-600 text-xl">Please log in to view your profile.</p>
+            </div>
+        );
+    }
+
+    const handleAvatarUpload = async () => {
+        const formData = new FormData();
+        formData.append("avatar", avatar);
+
+        try {
+            const res = await axios.put(`/users/${user.id}`, formData, {
+                headers: { "Content-Type": "multipart/form-data" },
+            });
+
+            const updated = await axios.get(`/users/${user.id}`);
+            dispatch(setUser(updated.data));
+
+            toast.success("Avatar updated!");
+        } catch (err) {
+            console.error(err);
+            toast.error("Failed to update avatar");
+        }
+    };
+
+    return (
+        <div className="max-w-5xl mx-auto p-6">
+            {/* User info */}
+            <div className="bg-white shadow-lg rounded-lg p-6 mb-8">
+                <h1 className="text-3xl font-bold mb-2">Profile</h1>
+                <img
+                    src={`http://localhost:8080/${user.avatar}`}
+                    alt="Avatar"
+                    className="w-24 h-24 rounded-full object-cover"
+                />
+                <div className="mt-4">
+                    <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => setAvatar(e.target.files[0])}
+                        className="mb-2"
+                    />
+                    <button
+                        onClick={handleAvatarUpload}
+                        className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+                    >
+                        Upload New Avatar
+                    </button>
+                </div>
+                <p className="text-gray-700">👤 <strong>Name:</strong> {user.name}</p>
+                <p className="text-gray-700">📧 <strong>Email:</strong> {user.email || 'Not provided'}</p>
+                <p className="text-gray-700">🎮 <strong>Role:</strong> {user.role}</p>
+            </div>
+
+            {/* Library */}
+            <div className="bg-white shadow-lg rounded-lg p-6">
+                <h2 className="text-2xl font-semibold mb-4">Your Game Library</h2>
+                {library.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                        {library.map((game) => (
+                            <Link key={game.id} to={`/games/${game.id}`} className="block">
+                                <div className="bg-gray-100 p-4 rounded-lg hover:shadow-lg transition">
+                                    <img
+                                        src={`http://localhost:8080/${game.image}`}
+                                        alt={game.name}
+                                        className="w-full h-40 object-cover rounded mb-2"
+                                    />
+                                    <h3 className="text-lg font-bold">{game.name}</h3>
+                                    <p className="text-gray-600">${game.price.toFixed(2)}</p>
+                                </div>
+                            </Link>
+                        ))}
+                    </div>
+                ) : (
+                    <p className="text-gray-600">You have not purchased any games yet.</p>
+                )}
+            </div>
+        </div>
+    );
+}
+
+export default Profile;
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import bcrypt from 'bcryptjs';
-import axios from 'axios'; // Use axios
+import axios from 'axios';
+import { toast } from 'react-toastify';
 
 function Register() {
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [avatar, setAvatar] = useState(null); // 👈 новое состояние
     const navigate = useNavigate();
 
     async function handleRegister(e) {
         e.preventDefault();
 
-        try {
-            const newUser = {
-                name: username,
-                email,
-                password,
-                role: 'user',
-            };
+        const formData = new FormData();
+        formData.append('username', username);
+        formData.append('email', email);
+        formData.append('password', password);
+        formData.append('role', 'user');
+        if (avatar) {
+            formData.append('avatar', avatar); // 👈 аватарка
+        }
 
-            await axios.post('http://localhost:8080/users', newUser);
+        try {
+            await axios.post('http://localhost:8080/users', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+            });
+            toast.success('Registered successfully! Please log in.');
             navigate('/login');
         } catch (error) {
             console.error('Error registering:', error);
-            const errorMessage = error.response?.data?.error || 'Error during registration';
-            alert(errorMessage);
+            toast.error(error.response?.data?.error || 'Error during registration');
         }
     }
 
     return (
-        <div className="container">
-            <h1>Register</h1>
-            <form onSubmit={handleRegister}>
+        <div className="container mx-auto p-4">
+            <h1 className="text-2xl font-bold mb-4">Register</h1>
+            <form onSubmit={handleRegister} className="max-w-md mx-auto space-y-4">
                 <input
                     type="text"
                     placeholder="Username"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
+                    className="border p-2 rounded w-full"
                     required
                 />
                 <input
@@ -831,6 +1035,7 @@ function Register() {
                     placeholder="Email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    className="border p-2 rounded w-full"
                     required
                 />
                 <input
@@ -838,9 +1043,18 @@ function Register() {
                     placeholder="Password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    className="border p-2 rounded w-full"
                     required
                 />
-                <button type="submit" className="btn btn-blue">Register</button>
+                <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setAvatar(e.target.files[0])}
+                    className="border p-2 rounded w-full"
+                />
+                <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded w-full">
+                    Register
+                </button>
             </form>
         </div>
     );

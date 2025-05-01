@@ -1,26 +1,50 @@
 import { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import axios from '../utils/axiosConfig';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { setUser } from '../redux/authReducer';
 
 function Profile() {
     const user = useSelector((state) => state.auth.user);
     const [library, setLibrary] = useState([]);
     const [avatar, setAvatar] = useState(null);
+    const dispatch = useDispatch();
 
     useEffect(() => {
         if (!user) return;
 
         axios.get('/library')
             .then((res) => {
-                setLibrary(res.data);
+                setLibrary(res.data || []);
             })
             .catch((err) => {
                 console.error('Error fetching library:', err);
                 toast.error('Failed to load your games');
             });
     }, [user]);
+
+    const handleAvatarUpload = async () => {
+        if (!avatar) {
+            toast.error('Please select a file');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('avatar', avatar);
+
+        try {
+            const res = await axios.put(`/users/${user.id}`, formData, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+            });
+            // Обновляем user в Redux с новым аватаром
+            dispatch(setUser({ ...user, avatar: res.data.avatar }));
+            toast.success('Avatar updated!');
+        } catch (err) {
+            console.error('Error uploading avatar:', err.response?.data);
+            toast.error(err.response?.data?.error || 'Failed to update avatar');
+        }
+    };
 
     if (!user) {
         return (
@@ -30,31 +54,23 @@ function Profile() {
         );
     }
 
-    const handleAvatarUpload = async () => {
-        const formData = new FormData();
-        formData.append("avatar", avatar);
-
-        try {
-            const res = await axios.put(`/users/${user.id}`, formData, {
-                headers: { "Content-Type": "multipart/form-data" },
-            });
-            toast.success("Avatar updated!");
-            // Обнови redux-профиль, если надо
-        } catch (err) {
-            toast.error("Failed to update avatar");
-        }
-    };
-
     return (
         <div className="max-w-5xl mx-auto p-6">
             {/* User info */}
             <div className="bg-white shadow-lg rounded-lg p-6 mb-8">
                 <h1 className="text-3xl font-bold mb-2">Profile</h1>
-                img
-                src={`http://localhost:8080/${user.avatar|| 'uploads/avatars/default-avatar.png'}`}
-                alt="Avatar"
-                className="w-24 h-24 rounded-full object-cover"
-                />
+                {user.avatar ? (
+                    <img
+                        src={`http://localhost:8080/${user.avatar}`}
+                        alt="Avatar"
+                        className="w-24 h-24 rounded-full object-cover"
+                        onError={(e) => console.error('Failed to load avatar:', e)}
+                    />
+                ) : (
+                    <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center text-gray-600">
+                        No Avatar
+                    </div>
+                )}
                 <div className="mt-4">
                     <input
                         type="file"
@@ -97,6 +113,7 @@ function Profile() {
                     <p className="text-gray-600">You have not purchased any games yet.</p>
                 )}
             </div>
+
         </div>
     );
 }
