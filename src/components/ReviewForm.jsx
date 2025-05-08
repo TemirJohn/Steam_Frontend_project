@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
-import axios from '../utils/axiosConfig'; // Используем настроенный axios
+import axios from '../utils/axiosConfig';
 import { toast } from 'react-toastify';
 
 function ReviewForm({ gameId, onReviewAdded }) {

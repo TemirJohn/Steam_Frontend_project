@@ -27,7 +27,6 @@ function ManageUsers() {
     useEffect(() => {
         axios.get('http://localhost:8080/users')
             .then((res) => {
-                // Фильтруем список, исключая текущего пользователя (админа)
                 const filteredUsers = res.data.filter((u) => u.id !== user.id);
                 setUsers(filteredUsers);
             })
@@ -139,7 +138,6 @@ function ManageUsers() {
                 ))}
             </ul>
 
-            {/* Модальное окно для удаления */}
             <Modal
                 isOpen={modalIsOpen}
                 onRequestClose={() => setModalIsOpen(false)}
@@ -164,7 +162,6 @@ function ManageUsers() {
                 </div>
             </Modal>
 
-            {/* Модальное окно для изменения роли */}
             <Modal
                 isOpen={roleModalIsOpen}
                 onRequestClose={() => setRoleModalIsOpen(false)}

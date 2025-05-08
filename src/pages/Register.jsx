@@ -7,7 +7,7 @@ function Register() {
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [avatar, setAvatar] = useState(null); // 👈 новое состояние
+    const [avatar, setAvatar] = useState(null);
     const navigate = useNavigate();
 
     async function handleRegister(e) {
@@ -19,11 +19,11 @@ function Register() {
         formData.append('password', password);
         formData.append('role', 'user');
         if (avatar) {
-            formData.append('avatar', avatar); // 👈 аватарка
+            formData.append('avatar', avatar);
         }
 
         try {
-            await axios.post('http://localhost:8080/users', formData, {
+            const response = await axios.post('http://localhost:8080/users', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
             toast.success('Registered successfully! Please log in.');

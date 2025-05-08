@@ -49,7 +49,7 @@ function AddGame() {
         formData.append('description', description);
         formData.append('category_id', categoryId);
         formData.append('image', image);
-        formData.append('developerId', user.id); // Добавляем developerId
+        formData.append('developerId', user.id);
 
         try {
             const res = await axios.post('/games', formData, {

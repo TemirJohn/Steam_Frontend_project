@@ -42,13 +42,6 @@ function Home() {
     return (
         <div className="container mx-auto p-4">
             <h1 className="text-2xl font-bold mb-4">Welcome to SteamLite</h1>
-            {user ? (
-                <p className="mb-4">
-                    Hello, {user.name}! You are logged in as <strong>{user.role}</strong>.
-                </p>
-            ) : (
-                <p className="mb-4">Please log in to access more features.</p>
-            )}
             <h2 className="text-xl font-semibold mb-2">Games</h2>
             <div className="mb-4 space-x-2 flex flex-wrap gap-2">
                 <button

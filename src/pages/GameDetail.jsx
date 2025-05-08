@@ -10,7 +10,7 @@ function GameDetail() {
     const { id } = useParams();
     const [game, setGame] = useState(null);
     const [reviews, setReviews] = useState([]);
-    const [ownsGame, setOwnsGame] = useState(false); // 👈 состояние владения
+    const [ownsGame, setOwnsGame] = useState(false);
     const user = useSelector((state) => state.auth.user);
 
     useEffect(() => {
@@ -120,8 +120,22 @@ function GameDetail() {
             <h2 className="text-xl font-semibold mb-2">Reviews</h2>
             <ul className="mb-4">
                 {reviews.map((review) => (
-                    <li key={review.id} className="border-b py-2">
-                        Rating: {review.rating}/5 - {review.comment}
+                    <li key={review.id} className="border-b py-2 flex items-start">
+                        {review.user?.avatar ? (
+                            <img
+                                src={`http://localhost:8080/${review.user.avatar}`}
+                                alt={review.user.name}
+                                className="w-10 h-10 rounded-full mr-4 object-cover"
+                            />
+                        ) : (
+                            <div className="w-10 h-10 rounded-full bg-gray-300 mr-4 flex items-center justify-center">
+                                <span className="text-gray-600">{review.user?.name?.[0] || 'U'}</span>
+                            </div>
+                        )}
+                        <div>
+                            <p className="font-semibold">{review.user?.name || 'Anonymous'}</p>
+                            <p>Rating: {review.rating}/5 - {review.comment}</p>
+                        </div>
                     </li>
                 ))}
             </ul>
@@ -129,7 +143,6 @@ function GameDetail() {
             {user && (
                 <ReviewForm gameId={Number(id)} onReviewAdded={handleReviewAdded} />
             )}
-
         </div>
     );
 }

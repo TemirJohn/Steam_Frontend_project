@@ -15,7 +15,6 @@ function Navbar() {
         navigate('/');
     };
 
-    // Закрытие меню при клике вне
     useEffect(() => {
         function handleClickOutside(event) {
             if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -42,8 +41,12 @@ function Navbar() {
                             onClick={() => setMenuOpen(!menuOpen)}
                             className="flex items-center space-x-2 bg-gray-700 px-4 py-2 rounded hover:bg-gray-600 transition"
                         >
-                            <span className="text-lg">👤</span>
+                            <img
+                                src={`http://localhost:8080/${user.avatar}`}
+                                className="w-10 h-10 rounded-full mr-4 object-cover"
+                            />
                             <span className="hidden md:inline">{user.name}</span>
+
                         </button>
 
                         {menuOpen && (

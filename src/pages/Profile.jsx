@@ -37,10 +37,11 @@ function Profile() {
             const res = await axios.put(`/users/${user.id}`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
-            // Обновляем user в Redux с новым аватаром
             dispatch(setUser({ ...user, avatar: res.data.avatar }));
             toast.success('Avatar updated!');
         } catch (err) {
+            console.log("User avatar in Profile:", user.avatar);
+            console.error('Failed to load avatar:', err)
             console.error('Error uploading avatar:', err.response?.data);
             toast.error(err.response?.data?.error || 'Failed to update avatar');
         }
@@ -56,7 +57,6 @@ function Profile() {
 
     return (
         <div className="max-w-5xl mx-auto p-6">
-            {/* User info */}
             <div className="bg-white shadow-lg rounded-lg p-6 mb-8">
                 <h1 className="text-3xl font-bold mb-2">Profile</h1>
                 {user.avatar ? (
@@ -90,7 +90,6 @@ function Profile() {
                 <p className="text-gray-700">🎮 <strong>Role:</strong> {user.role}</p>
             </div>
 
-            {/* Library */}
             <div className="bg-white shadow-lg rounded-lg p-6">
                 <h2 className="text-2xl font-semibold mb-4">Your Game Library</h2>
                 {library.length > 0 ? (

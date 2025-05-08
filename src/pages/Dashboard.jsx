@@ -15,11 +15,18 @@ function Dashboard() {
 
             <div className="flex flex-col sm:flex-row gap-4">
                 {user && user.role === 'admin' && (
-                    <Link to="/manage-users" className="w-full sm:w-auto">
-                        <button className="w-full bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded transition">
-                            Manage Users
-                        </button>
-                    </Link>
+                    <>
+                        <Link to="/manage-users" className="w-full sm:w-auto">
+                            <button className="w-full bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded transition">
+                                Manage Users
+                            </button>
+                        </Link>
+                        <Link to="/manage-categories" className="w-full sm:w-auto">
+                            <button className="w-full bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded transition">
+                                Manage Categories
+                            </button>
+                        </Link>
+                    </>
                 )}
 
                 {user && (user.role === 'developer' || user.role === 'admin') && (
@@ -30,7 +37,6 @@ function Dashboard() {
                     </Link>
                 )}
             </div>
-
         </div>
     );
 }

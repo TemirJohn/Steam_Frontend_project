@@ -17,7 +17,7 @@ import ManageUsers from './pages/ManageUsers';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Profile from "./pages/Profile";
-import Footer from "./pages/Footer";
+import ManageCategories from "./pages/ManageCategories";
 
 function ProtectedRoute({ children, allowedRoles }) {
     const user = useSelector((state) => state.auth.user);
@@ -84,6 +84,7 @@ function App() {
                                 </ProtectedRoute>
                             }
                         />
+                        <Route path="/manage-categories" element={<ManageCategories />} />
                     </Routes>
                     <ToastContainer />
 
