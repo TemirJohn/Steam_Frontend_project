@@ -103,97 +103,137 @@ function ManageUsers() {
     };
 
     return (
-        <div className="container mx-auto p-4">
-            <h1 className="text-2xl font-bold mb-4">Manage Users (Admins Only)</h1>
-            <ul className="space-y-2">
-                {users.map((u) => (
-                    <li key={u.id} className="flex justify-between items-center border-b py-2">
-                        <span>
-                            {u.name} - {u.role} - {u.email} - {u.isBanned ? 'Banned' : 'Active'}
-                        </span>
-                        <div className="space-x-2">
-                            {u.isBanned ? (
-                                <button
-                                    onClick={() => handleUnban(u.id)}
-                                    className="bg-green-500 text-white px-4 py-2 rounded"
+        <div
+            className="min-h-screen flex flex-col bg-cover bg-center bg-fixed"
+            style={{
+                backgroundColor: '#171a21',
+            }}
+        >
+            <main className="flex-grow">
+                <div className="container mx-auto px-4 py-12">
+                    <div className="max-w-4xl mx-auto p-6 bg-gray-800 bg-opacity-95 rounded-xl shadow-lg text-white">
+                        <h1 className="text-2xl font-bold mb-6 text-purple-400">Manage Users (Admins Only)</h1>
+                        <ul className="space-y-2">
+                            {users.map((u) => (
+                                <li
+                                    key={u.id}
+                                    className="flex justify-between items-center bg-gray-700 p-4 rounded-lg"
                                 >
-                                    Unban
-                                </button>
-                            ) : (
+                                    <div className="flex items-center space-x-4">
+                                        {u.avatar ? (
+                                            <img
+                                                src={`http://localhost:8080/${u.avatar}`}
+                                                alt={u.name}
+                                                className="w-10 h-10 rounded-full border border-green-500 object-cover"
+                                            />
+                                        ) : (
+                                            <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center text-gray-300 border border-gray-500">
+                                                {u.name?.[0]?.toUpperCase() || '?'}
+                                            </div>
+                                        )}
+                                        <span className="text-gray-300">
+                                            <span className="text-green-400">{u.name}</span> - {u.role} - {u.email} -{' '}
+                                            {u.isBanned ? (
+                                                <span className="text-red-400">Banned</span>
+                                            ) : (
+                                                <span className="text-green-400">Active</span>
+                                            )}
+                                        </span>
+                                    </div>
+                                    <div className="space-x-2">
+                                        {u.isBanned ? (
+                                            <button
+                                                onClick={() => handleUnban(u.id)}
+                                                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-all duration-200"
+                                                aria-label={`Unban user ${u.name}`}
+                                            >
+                                                Unban
+                                            </button>
+                                        ) : (
+                                            <button
+                                                onClick={() => handleBan(u.id)}
+                                                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-all duration-200"
+                                                aria-label={`Ban user ${u.name}`}
+                                            >
+                                                Ban
+                                            </button>
+                                        )}
+                                        <button
+                                            onClick={() => openRoleModal(u)}
+                                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-all duration-200"
+                                            aria-label={`Change role for ${u.name}`}
+                                        >
+                                            Change Role
+                                        </button>
+                                    </div>
+                                </li>
+                            ))}
+                        </ul>
+
+                        <Modal
+                            isOpen={modalIsOpen}
+                            onRequestClose={() => setModalIsOpen(false)}
+                            className="bg-gray-800 p-6 rounded-xl shadow-lg max-w-md mx-auto mt-20 text-white"
+                            overlayClassName="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center"
+                        >
+                            <h2 className="text-xl font-semibold mb-4 text-purple-400">Confirm Deletion</h2>
+                            <p className="text-gray-300">
+                                Are you sure you want to delete{' '}
+                                <strong className="text-green-400">{userToDelete?.name}</strong>?
+                            </p>
+                            <div className="mt-4 flex justify-end space-x-2">
                                 <button
-                                    onClick={() => handleBan(u.id)}
-                                    className="bg-red-500 text-white px-4 py-2 rounded"
+                                    onClick={handleDelete}
+                                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-all duration-200"
                                 >
-                                    Ban
+                                    Yes, Delete
                                 </button>
-                            )}
-                            <button
-                                onClick={() => openRoleModal(u)}
-                                className="bg-blue-500 text-white px-4 py-2 rounded"
+                                <button
+                                    onClick={() => setModalIsOpen(false)}
+                                    className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-all duration-200"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </Modal>
+
+                        <Modal
+                            isOpen={roleModalIsOpen}
+                            onRequestClose={() => setRoleModalIsOpen(false)}
+                            className="bg-gray-800 p-6 rounded-xl shadow-lg max-w-md mx-auto mt-20 text-white"
+                            overlayClassName="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center"
+                        >
+                            <h2 className="text-xl font-semibold mb-4 text-purple-400">
+                                Change Role for <span className="text-green-400">{userToUpdateRole?.name}</span>
+                            </h2>
+                            <select
+                                value={newRole}
+                                onChange={(e) => setNewRole(e.target.value)}
+                                className="w-full bg-gray-700 text-white p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 mb-4"
+                                aria-label="Select new role"
                             >
-                                Change Role
-                            </button>
-                        </div>
-                    </li>
-                ))}
-            </ul>
-
-            <Modal
-                isOpen={modalIsOpen}
-                onRequestClose={() => setModalIsOpen(false)}
-                className="bg-white p-6 rounded shadow-lg max-w-md mx-auto mt-20"
-                overlayClassName="fixed inset-0 bg-black bg-opacity-50"
-            >
-                <h2 className="text-xl font-semibold mb-4">Confirm Deletion</h2>
-                <p>Are you sure you want to delete {userToDelete?.name}?</p>
-                <div className="mt-4 flex justify-end space-x-2">
-                    <button
-                        onClick={handleDelete}
-                        className="bg-red-500 text-white px-4 py-2 rounded"
-                    >
-                        Yes, Delete
-                    </button>
-                    <button
-                        onClick={() => setModalIsOpen(false)}
-                        className="bg-gray-500 text-white px-4 py-2 rounded"
-                    >
-                        Cancel
-                    </button>
+                                <option value="user">User</option>
+                                <option value="admin">Admin</option>
+                                <option value="developer">Developer</option>
+                            </select>
+                            <div className="flex justify-end space-x-2">
+                                <button
+                                    onClick={handleRoleChange}
+                                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-all duration-200"
+                                >
+                                    Update Role
+                                </button>
+                                <button
+                                    onClick={() => setRoleModalIsOpen(false)}
+                                    className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-all duration-200"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </Modal>
+                    </div>
                 </div>
-            </Modal>
-
-            <Modal
-                isOpen={roleModalIsOpen}
-                onRequestClose={() => setRoleModalIsOpen(false)}
-                className="bg-white p-6 rounded shadow-lg max-w-md mx-auto mt-20"
-                overlayClassName="fixed inset-0 bg-black bg-opacity-50"
-            >
-                <h2 className="text-xl font-semibold mb-4">Change Role for {userToUpdateRole?.name}</h2>
-                <select
-                    value={newRole}
-                    onChange={(e) => setNewRole(e.target.value)}
-                    className="border p-2 rounded w-full mb-4"
-                >
-                    <option value="user">User</option>
-                    <option value="admin">Admin</option>
-                    <option value="developer">Developer</option>
-                </select>
-                <div className="flex justify-end space-x-2">
-                    <button
-                        onClick={handleRoleChange}
-                        className="bg-blue-500 text-white px-4 py-2 rounded"
-                    >
-                        Update Role
-                    </button>
-                    <button
-                        onClick={() => setRoleModalIsOpen(false)}
-                        className="bg-gray-500 text-white px-4 py-2 rounded"
-                    >
-                        Cancel
-                    </button>
-                </div>
-            </Modal>
-
+            </main>
         </div>
     );
 }

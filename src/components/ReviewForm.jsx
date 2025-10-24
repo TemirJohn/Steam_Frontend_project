@@ -35,10 +35,10 @@ function ReviewForm({ gameId, onReviewAdded }) {
     }
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-4">
-            <label className="block">
-                Rating:
-                <div className="flex space-x-2 mt-2">
+        <form onSubmit={handleSubmit} className="space-y-6 bg-gray-800 p-6 rounded-xl shadow-md text-white">
+            <div>
+                <label className="block mb-2 text-lg font-semibold text-purple-300">Rating:</label>
+                <div className="flex space-x-2">
                     {[1, 2, 3, 4, 5].map((star) => (
                         <button
                             type="button"
@@ -50,19 +50,21 @@ function ReviewForm({ gameId, onReviewAdded }) {
                         </button>
                     ))}
                 </div>
-            </label>
-            <label className="block">
-                Comment:
+            </div>
+
+            <div>
+                <label className="block mb-2 text-lg font-semibold text-purple-300">Comment:</label>
                 <textarea
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
-                    className="border p-2 rounded w-full mt-2"
+                    className="w-full h-32 bg-gray-700 text-white p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
                     placeholder="Write your thoughts about the game..."
                 />
-            </label>
+            </div>
+
             <button
                 type="submit"
-                className="bg-blue-500 text-white px-4 py-2 rounded w-full"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-all shadow"
             >
                 Submit Review
             </button>

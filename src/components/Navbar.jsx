@@ -50,10 +50,10 @@ function Navbar() {
                         </button>
 
                         {menuOpen && (
-                            <div className="absolute right-0 mt-2 w-48 bg-white text-black rounded shadow-lg overflow-hidden z-50">
+                            <div className="absolute right-0 mt-2 w-48 bg-black text-white rounded shadow-lg overflow-hidden z-50">
                                 <Link
                                     to="/profile"
-                                    className="block px-4 py-2 hover:bg-gray-100"
+                                    className="block px-4 py-2 hover:bg-purple-300"
                                     onClick={() => setMenuOpen(false)}
                                 >
                                     Profile
@@ -61,7 +61,7 @@ function Navbar() {
 
                                 <button
                                     onClick={handleLogout}
-                                    className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                                    className="w-full text-left px-4 py-2 hover:bg-purple-300"
                                 >
                                     Logout
                                 </button>

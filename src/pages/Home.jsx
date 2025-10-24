@@ -40,32 +40,48 @@ function Home() {
     }, []);
 
     return (
-        <div className="container mx-auto p-4">
-            <h1 className="text-2xl font-bold mb-4">Welcome to SteamLite</h1>
-            <h2 className="text-xl font-semibold mb-2">Games</h2>
-            <div className="mb-4 space-x-2 flex flex-wrap gap-2">
-                <button
-                    onClick={() => setSearchParams({})}
-                    className="bg-gray-200 px-4 py-2 rounded"
-                >
-                    All
-                </button>
-                {categories.map((cat) => (
-                    <button
-                        key={cat.id}
-                        onClick={() => setSearchParams({ category: `${cat.id}` })}
-                        className="bg-gray-200 px-4 py-2 rounded"
-                    >
-                        {cat.name}
-                    </button>
-                ))}
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {games.map((game) => (
-                    <GameCard key={game.id} game={game} />
-                ))}
-            </div>
+        <div
+            className="min-h-screen bg-cover bg-center bg-fixed"
+            style={{
+                backgroundColor: '#171a21',
+            }}
+        >
+            <main className="container mx-auto px-4 py-12">
+                {/* Welcome Container */}
+                <div className="max-w-3xl mx-auto mb-10 p-8 bg-gray-800 bg-opacity-90 text-white rounded-xl shadow-xl text-center">
+                    <h1 className="text-4xl font-bold text-purple-400 mb-4">Welcome to SteamLite</h1>
+                </div>
 
+                {/* Category Filters */}
+                <div className="mb-8 flex flex-wrap justify-center gap-3">
+                    <button
+                        onClick={() => setSearchParams({})}
+                        className={`px-4 py-2 rounded-full bg-gray-700 text-white hover:bg-purple-600 transition ${
+                            categoryFilter === 'all' ? 'bg-purple-600 font-bold' : ''
+                        }`}
+                    >
+                        All
+                    </button>
+                    {categories.map((cat) => (
+                        <button
+                            key={cat.id}
+                            onClick={() => setSearchParams({ category: `${cat.id}` })}
+                            className={`px-4 py-2 rounded-full bg-gray-700 text-white hover:bg-purple-600 transition ${
+                                categoryFilter === `${cat.id}` ? 'bg-purple-600 font-bold' : ''
+                            }`}
+                        >
+                            {cat.name}
+                        </button>
+                    ))}
+                </div>
+
+                {/* Games Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    {games.map((game) => (
+                        <GameCard key={game.id} game={game} />
+                    ))}
+                </div>
+            </main>
         </div>
     );
 }
