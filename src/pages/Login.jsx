@@ -22,20 +22,21 @@ function Login() {
             navigate('/');
         } catch (error) {
             console.error('Login error:', error);
-            toast.error(error.response?.data?.error || 'Login failed');
+            const errorMessage = error.response?.data?.error || 'Login failed';
+            toast.error(errorMessage);
         }
     }
 
     return (
-        <div className="container mx-auto p-4">
-            <h1 className="text-2xl font-bold mb-4">Login</h1>
-            <form onSubmit={handleLogin} className="max-w-md mx-auto space-y-4">
+        <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center px-4">
+            <h1 className="text-3xl font-bold mb-6 text-yellow-300">Login</h1>
+            <form onSubmit={handleLogin} className="bg-gray-800 p-8 rounded-2xl shadow-2xl w-full max-w-md space-y-4 border border-gray-700">
                 <input
                     type="email"
                     placeholder="Email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="border p-2 rounded w-full"
+                    className="bg-gray-700 border border-gray-600 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-yellow-400"
                     required
                 />
                 <input
@@ -43,14 +44,16 @@ function Login() {
                     placeholder="Password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="border p-2 rounded w-full"
+                    className="bg-gray-700 border border-gray-600 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-yellow-400"
                     required
                 />
-                <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded w-full">
+                <button
+                    type="submit"
+                    className="w-full bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-2 px-4 rounded-full transition duration-200"
+                >
                     Login
                 </button>
             </form>
-
         </div>
     );
 }

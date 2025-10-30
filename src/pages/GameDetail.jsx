@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { Link } from 'react-router-dom';
 import axios from '../utils/axiosConfig';
 import ReviewForm from '../components/ReviewForm';
 import { toast } from 'react-toastify';
@@ -74,75 +73,98 @@ function GameDetail() {
             });
     };
 
-    if (!game) return <div>Loading...</div>;
+    if (!game) return <div className="text-center text-white">Loading...</div>;
 
     const isEditor =
         user &&
         (user.role === 'admin' || (user.role === 'developer' && user.id === game.developerId));
 
     return (
-        <div className="container mx-auto p-4">
-            <h1 className="text-2xl font-bold mb-4">{game.name}</h1>
-            <img
-                src={`http://localhost:8080/${game.image}`}
-                alt={game.name}
-                className="w-full h-64 object-cover mb-4"
-            />
-            <p className="text-lg mb-2">${game.price.toFixed(2)}</p>
-            <p className="text-gray-600 mb-4">{game.description}</p>
+        <div
+            className="min-h-screen flex flex-col bg-cover bg-center bg-fixed"
+            style={{
+                backgroundColor: '#171a21',
+            }}
+        >
+            <main className="flex-grow">
+                <div className="container mx-auto px-4 py-12">
+                    <div className="text-center">
+                        <h1 className="text-5xl font-bold text-purple-400 mb-6">{game.name}</h1>
 
-            {isEditor && (
-                <div className="mb-4">
-                    <Link to={`/games/${id}/edit`}>
-                        <button className="bg-blue-500 text-white px-4 py-2 rounded mr-2">
-                            Edit Game
-                        </button>
-                    </Link>
-                    <Link to={`/delete-game/${id}`}>
-                        <button className="bg-red-500 text-white px-4 py-2 rounded">
-                            Delete Game
-                        </button>
-                    </Link>
-                </div>
-            )}
-
-            {user && user.role === 'user' && (
-                <button
-                    onClick={ownsGame ? handleReturn : handlePurchase}
-                    className={`${
-                        ownsGame ? 'bg-yellow-500' : 'bg-green-500'
-                    } text-white px-4 py-2 rounded mb-4`}
-                >
-                    {ownsGame ? 'Return Game' : 'Buy Now'}
-                </button>
-            )}
-
-            <h2 className="text-xl font-semibold mb-2">Reviews</h2>
-            <ul className="mb-4">
-                {reviews.map((review) => (
-                    <li key={review.id} className="border-b py-2 flex items-start">
-                        {review.user?.avatar ? (
+                        <div className="mt-8 p-6 rounded-lg bg-gray-800 bg-opacity-95 text-white shadow-lg mb-8">
                             <img
-                                src={`http://localhost:8080/${review.user.avatar}`}
-                                alt={review.user.name}
-                                className="w-10 h-10 rounded-full mr-4 object-cover"
+                                src={`http://localhost:8080/${game.image}`}
+                                alt={game.name}
+                                className="w-full h-64 object-cover rounded-lg mb-6"
+                                loading="lazy"
                             />
-                        ) : (
-                            <div className="w-10 h-10 rounded-full bg-gray-300 mr-4 flex items-center justify-center">
-                                <span className="text-gray-600">{review.user?.name?.[0] || 'U'}</span>
-                            </div>
-                        )}
-                        <div>
-                            <p className="font-semibold">{review.user?.name || 'Anonymous'}</p>
-                            <p>Rating: {review.rating}/5 - {review.comment}</p>
-                        </div>
-                    </li>
-                ))}
-            </ul>
+                            <p className="text-xl font-semibold text-green-400 mb-4">${game.price.toFixed(2)}</p>
+                            <p className="text-white mb-4">{game.description}</p>
 
-            {user && (
-                <ReviewForm gameId={Number(id)} onReviewAdded={handleReviewAdded} />
-            )}
+                            {isEditor && (
+                                <div className="mb-4">
+                                    <Link to={`/games/${id}/edit`}>
+                                        <button className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded mr-2 transition-all duration-200">
+                                            Edit Game
+                                        </button>
+                                    </Link>
+                                    <Link to={`/delete-game/${id}`}>
+                                        <button className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded transition-all duration-200">
+                                            Delete Game
+                                        </button>
+                                    </Link>
+                                </div>
+                            )}
+
+                            {user && user.role === 'user' && (
+                                <button
+                                    onClick={ownsGame ? handleReturn : handlePurchase}
+                                    className={`${
+                                        ownsGame ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-green-500 hover:bg-green-600'
+                                    } text-white px-4 py-2 rounded mb-4 transition-all duration-200`}
+                                >
+                                    {ownsGame ? 'Return Game' : 'Buy Now'}
+                                </button>
+                            )}
+
+                            <div className="mb-6">
+                                <h2 className="text-2xl font-semibold mb-2 text-white">Reviews</h2>
+                                {reviews.length === 0 ? (
+                                    <p className="text-white">No reviews yet. Be the first to review!</p>
+                                ) : (
+                                    reviews.map((review) => (
+                                        <div key={review.id} className="bg-gray-700 p-4 rounded-lg mb-2 flex items-start">
+                                            {review.user?.avatar ? (
+                                                <img
+                                                    src={`http://localhost:8080/${review.user.avatar}`}
+                                                    alt={review.user.name || 'User'}
+                                                    width="40"
+                                                    height="40"
+                                                    loading="lazy"
+                                                    className="w-10 h-10 rounded-full mr-4 object-cover border border-green-500 hover:scale-110 transition"
+                                                />
+                                            ) : (
+                                                <div className="w-10 h-10 rounded-full bg-gray-600 mr-4 flex items-center justify-center text-sm text-gray-300 border border-gray-500">
+                                                    {review.user?.name?.[0]?.toUpperCase() || '?'}
+                                                </div>
+                                            )}
+                                            <div className="text-left">
+                                                <p className="font-semibold text-white">{review.user?.name || 'Anonymous'}</p>
+                                                <p className="text-white">{review.comment}</p>
+                                                <p className="text-sm text-gray-400">Rating: {review.rating}/5</p>
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+
+                            {user && (
+                                <ReviewForm gameId={Number(id)} onReviewAdded={handleReviewAdded} />
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </main>
         </div>
     );
 }

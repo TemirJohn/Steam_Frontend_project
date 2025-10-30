@@ -5,7 +5,6 @@ import { PersistGate } from 'redux-persist/integration/react';
 import { store, persistor } from './redux/store';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
-import Games from './pages/Games';
 import GameDetail from './pages/GameDetail';
 import AddGame from './pages/AddGame';
 import EditGame from './pages/EditGame';
@@ -40,7 +39,7 @@ function App() {
                         <Route path="/login" element={<Login />} />
                         <Route path="/register" element={<Register />} />
                         <Route path="/" element={<Home />} />
-                        <Route path="/games" element={<Games />} />
+                        {/* <Route path="/games" element={<Games />} /> */}
                         <Route path="/games/:id" element={<GameDetail />} />
                         <Route
                             path="/add-game"

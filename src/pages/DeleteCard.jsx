@@ -61,37 +61,46 @@ function DeleteCard() {
     };
 
     if (!game) return (
-        <div className="flex justify-center items-center h-screen">
-            <p className="text-gray-600 text-xl">Loading game...</p>
+        <div className="flex justify-center items-center h-screen text-white">
+            <p className="text-xl">Loading game...</p>
         </div>
     );
 
     return (
-        <Modal
-            isOpen={modalIsOpen}
-            onRequestClose={handleCancel}
-            className="bg-white p-6 rounded shadow-lg max-w-md mx-auto mt-20"
-            overlayClassName="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center"
+        <div
+            className="min-h-screen flex flex-col bg-cover bg-center bg-fixed"
+            style={{
+                backgroundColor: '#171a21',
+            }}
         >
-            <h2 className="text-2xl font-bold mb-4">Delete Game</h2>
-            <p className="mb-2">Are you sure you want to delete <strong>{game.name}</strong>?</p>
-            <p className="text-gray-600 mb-6">This action cannot be undone.</p>
+            <Modal
+                isOpen={modalIsOpen}
+                onRequestClose={handleCancel}
+                className="bg-gray-800 p-6 rounded-xl shadow-lg max-w-md mx-auto mt-20 text-white"
+                overlayClassName="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center"
+            >
+                <h2 className="text-2xl font-bold mb-4 text-purple-400">Delete Game</h2>
+                <p className="mb-2">
+                    Are you sure you want to delete <strong className="text-green-400">{game.name}</strong>?
+                </p>
+                <p className="text-gray-300 mb-6">This action cannot be undone.</p>
 
-            <div className="flex justify-end gap-4">
-                <button
-                    onClick={handleDelete}
-                    className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded transition"
-                >
-                    Confirm Delete
-                </button>
-                <button
-                    onClick={handleCancel}
-                    className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded transition"
-                >
-                    Cancel
-                </button>
-            </div>
-        </Modal>
+                <div className="flex justify-end gap-4">
+                    <button
+                        onClick={handleDelete}
+                        className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-all duration-200"
+                    >
+                        Confirm Delete
+                    </button>
+                    <button
+                        onClick={handleCancel}
+                        className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-all duration-200"
+                    >
+                        Cancel
+                    </button>
+                </div>
+            </Modal>
+        </div>
     );
 }
 
