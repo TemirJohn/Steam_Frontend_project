@@ -22,8 +22,21 @@ function Login() {
             navigate('/');
         } catch (error) {
             console.error('Login error:', error);
-            const errorMessage = error.response?.data?.error || 'Login failed';
-            toast.error(errorMessage);
+            
+            // ОБНОВЛЕНО: Обработка ошибок валидации
+            const errorData = error.response?.data;
+            
+            if (errorData?.errors) {
+                // Множественные ошибки валидации
+                Object.values(errorData.errors).forEach(err => {
+                    toast.error(err);
+                });
+            } else if (errorData?.error) {
+                // Единичная ошибка
+                toast.error(errorData.error);
+            } else {
+                toast.error('Login failed');
+            }
         }
     }
 

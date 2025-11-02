@@ -30,7 +30,21 @@ function Register() {
             navigate('/login');
         } catch (error) {
             console.error('Error registering:', error);
-            toast.error(error.response?.data?.error || 'Error during registration');
+            
+            // ОБНОВЛЕНО: Обработка ошибок валидации
+            const errorData = error.response?.data;
+            
+            if (errorData?.errors) {
+                // Множественные ошибки валидации
+                Object.values(errorData.errors).forEach(err => {
+                    toast.error(err);
+                });
+            } else if (errorData?.error) {
+                // Единичная ошибка
+                toast.error(errorData.error);
+            } else {
+                toast.error('Error during registration');
+            }
         }
     }
 
