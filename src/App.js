@@ -3,6 +3,8 @@ import { useSelector } from 'react-redux';
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import { store, persistor } from './redux/store';
+import { useEffect } from 'react';
+import { fetchCSRFToken } from './config/axios'; 
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import GameDetail from './pages/GameDetail';
@@ -30,6 +32,20 @@ function ProtectedRoute({ children, allowedRoles }) {
 }
 
 function App() {
+
+    useEffect(() => {
+        const initCSRF = async () => {
+            try {
+                await fetchCSRFToken();
+                console.log('✅ CSRF token initialized');
+            } catch (error) {
+                console.error('❌ Failed to initialize CSRF token:', error);
+            }
+        };
+
+        initCSRF();
+    }, []);
+
     return (
         <Provider store={store}>
             <PersistGate loading={null} persistor={persistor}>

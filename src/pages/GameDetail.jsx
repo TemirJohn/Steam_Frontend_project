@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import axios from '../utils/axiosConfig';
+import axiosInstance from '../utils/axiosConfig';
 import ReviewForm from '../components/ReviewForm';
 import { toast } from 'react-toastify';
 
@@ -13,14 +13,14 @@ function GameDetail() {
     const user = useSelector((state) => state.auth.user);
 
     useEffect(() => {
-        axios.get(`/games/${id}`)
+        axiosInstance.get(`/games/${id}`)
             .then((res) => setGame(res.data))
             .catch((err) => {
                 console.error('Error fetching game:', err);
                 toast.error('Failed to load game');
             });
 
-        axios.get(`/reviews?gameId=${id}`)
+            axiosInstance.get(`/reviews?gameId=${id}`)
             .then((res) => setReviews(res.data))
             .catch((err) => {
                 console.error('Error fetching reviews:', err);
@@ -28,7 +28,7 @@ function GameDetail() {
             });
 
         if (user) {
-            axios.get('/library')
+            axiosInstance.get('/library')
                 .then((res) => {
                     const hasGame = res.data.some((g) => g.id === Number(id));
                     setOwnsGame(hasGame);
@@ -41,7 +41,7 @@ function GameDetail() {
 
     const handlePurchase = async () => {
         try {
-            await axios.post('/ownership', {
+            await axiosInstance.post('/ownership', {
                 gameId: Number(id),
                 status: 'owned',
             });
@@ -55,7 +55,7 @@ function GameDetail() {
 
     const handleReturn = async () => {
         try {
-            await axios.delete(`/ownership?gameId=${id}`);
+            await axiosInstance.delete(`/ownership?gameId=${id}`);
             setOwnsGame(false);
             toast.success('Game returned successfully!');
         } catch (error) {
@@ -65,7 +65,7 @@ function GameDetail() {
     };
 
     const handleReviewAdded = () => {
-        axios.get(`/reviews?gameId=${id}`)
+        axiosInstance.get(`/reviews?gameId=${id}`)
             .then((res) => setReviews(res.data))
             .catch((err) => {
                 console.error('Error fetching reviews:', err);

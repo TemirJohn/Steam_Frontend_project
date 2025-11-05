@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import axios from '../utils/axiosConfig';
+import axiosInstance from '../utils/axiosConfig';
 import { updateGame } from '../redux/gameReducer';
 import { toast } from 'react-toastify';
 
@@ -24,7 +24,7 @@ function EditGame() {
     }, [user, navigate]);
 
     useEffect(() => {
-        axios.get(`/games/${id}`)
+        axiosInstance.get(`/games/${id}`)
             .then((res) => {
                 const data = res.data;
                 if (user.role === 'developer' && data.developerId !== user.id) {
@@ -53,7 +53,7 @@ function EditGame() {
         if (image) formData.append('image', image);
 
         try {
-            const res = await axios.put(`/games/${id}`, formData, {
+            const res = await axiosInstance.put(`/games/${id}`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
             dispatch(updateGame(res.data));

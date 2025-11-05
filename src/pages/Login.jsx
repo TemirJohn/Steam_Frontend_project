@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { login } from '../redux/authReducer';
-import axios from 'axios';
+import axiosInstance from '../utils/axiosConfig';
 import { toast } from 'react-toastify';
 
 function Login() {
@@ -14,7 +14,7 @@ function Login() {
     async function handleLogin(e) {
         e.preventDefault();
         try {
-            const response = await axios.post('http://localhost:8080/login', { email, password });
+            const response = await axiosInstance.post('/login', { email, password });
             localStorage.setItem('token', response.data.token);
             localStorage.setItem('user', JSON.stringify(response.data.user));
             dispatch(login(response.data.user));

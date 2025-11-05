@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { deleteGame } from '../redux/gameReducer';
-import axios from '../utils/axiosConfig';
+import axiosInstance from '../utils/axiosConfig';
 import Modal from 'react-modal';
 import { toast } from 'react-toastify';
 
@@ -25,7 +25,7 @@ function DeleteCard() {
             return;
         }
 
-        axios.get(`/games/${id}`)
+        axiosInstance.get(`/games/${id}`)
             .then((res) => {
                 const data = res.data;
                 if (user.role === 'developer' && data.developerId !== user.id) {
@@ -45,7 +45,7 @@ function DeleteCard() {
 
     const handleDelete = async () => {
         try {
-            await axios.delete(`/games/${id}`);
+            await axiosInstance.delete(`/games/${id}`);
             dispatch(deleteGame(Number(id)));
             toast.success('Game deleted successfully!');
             navigate('/dashboard');

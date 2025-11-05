@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import axios from '../utils/axiosConfig';
+import axiosInstance from '../utils/axiosConfig';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { setUser } from '../redux/authReducer';
@@ -14,7 +14,7 @@ function Profile() {
     useEffect(() => {
         if (!user) return;
 
-        axios.get('/library')
+        axiosInstance.get('/library')
             .then((res) => {
                 setLibrary(res.data || []);
             })
@@ -34,7 +34,7 @@ function Profile() {
         formData.append('avatar', avatar);
 
         try {
-            const res = await axios.put(`/users/${user.id}`, formData, {
+            const res = await axiosInstance.put(`/users/${user.id}`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
             dispatch(setUser({ ...user, avatar: res.data.avatar }));

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import axios from '../utils/axiosConfig';
+import axiosInstance from '../utils/axiosConfig';
 import Modal from 'react-modal';
 import { toast } from 'react-toastify';
 
@@ -25,7 +25,7 @@ function ManageUsers() {
     }, [user, navigate]);
 
     useEffect(() => {
-        axios.get('http://localhost:8080/users')
+        axiosInstance.get('http://localhost:8080/users')
             .then((res) => {
                 const filteredUsers = res.data.filter((u) => u.id !== user.id);
                 setUsers(filteredUsers);
@@ -38,7 +38,7 @@ function ManageUsers() {
 
     async function handleDelete() {
         try {
-            await axios.delete(`http://localhost:8080/users/${userToDelete.id}`);
+            await axiosInstance.delete(`http://localhost:8080/users/${userToDelete.id}`);
             setUsers(users.filter((u) => u.id !== userToDelete.id));
             toast.success('User deleted successfully!');
         } catch (error) {
@@ -50,7 +50,7 @@ function ManageUsers() {
 
     async function handleBan(userId) {
         try {
-            const res = await axios.post(`http://localhost:8080/users/${userId}/ban`);
+            const res = await axiosInstance.post(`http://localhost:8080/users/${userId}/ban`);
             setUsers(users.map((u) => (u.id === userId ? res.data.user : u)));
             toast.success('User banned successfully!');
         } catch (error) {
@@ -61,7 +61,7 @@ function ManageUsers() {
 
     async function handleUnban(userId) {
         try {
-            const res = await axios.post(`http://localhost:8080/users/${userId}/unban`);
+            const res = await axiosInstance.post(`http://localhost:8080/users/${userId}/unban`);
             setUsers(users.map((u) => (u.id === userId ? res.data.user : u)));
             toast.success('User unbanned successfully!');
         } catch (error) {
@@ -78,7 +78,7 @@ function ManageUsers() {
         try {
             const formData = new FormData();
             formData.append('role', newRole);
-            const res = await axios.put(`http://localhost:8080/users/${userToUpdateRole.id}`, formData, {
+            const res = await axiosInstance.put(`http://localhost:8080/users/${userToUpdateRole.id}`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
             setUsers(users.map((u) => (u.id === userToUpdateRole.id ? res.data : u)));

@@ -1,6 +1,8 @@
+// ============ Register.jsx ============
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../utils/axiosConfig'; // ✅ Используем настроенный axios
+import { API_ENDPOINTS } from '../config/api'; // ДОБАВЛЕНО
 import { toast } from 'react-toastify';
 
 function Register() {
@@ -23,7 +25,7 @@ function Register() {
         }
 
         try {
-            const response = await axios.post('http://localhost:8080/users', formData, {
+            const response = await axios.post(API_ENDPOINTS.REGISTER, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
             toast.success('Registered successfully! Please log in.');
@@ -31,16 +33,13 @@ function Register() {
         } catch (error) {
             console.error('Error registering:', error);
             
-            // ОБНОВЛЕНО: Обработка ошибок валидации
             const errorData = error.response?.data;
             
             if (errorData?.errors) {
-                // Множественные ошибки валидации
                 Object.values(errorData.errors).forEach(err => {
                     toast.error(err);
                 });
             } else if (errorData?.error) {
-                // Единичная ошибка
                 toast.error(errorData.error);
             } else {
                 toast.error('Error during registration');

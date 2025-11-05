@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import axios from '../utils/axiosConfig';
+import axiosInstance from '../utils/axiosConfig';
 import Modal from 'react-modal';
 import { toast } from 'react-toastify';
 import { deleteGame } from '../redux/gameReducer';
@@ -30,7 +30,7 @@ function ManageCategories() {
 
     const fetchCategories = async () => {
         try {
-            const res = await axios.get('http://localhost:8080/categories');
+            const res = await axiosInstance.get('http://localhost:8080/categories');
             setCategories(res.data);
         } catch (err) {
             console.error('Error fetching categories:', err);
@@ -52,12 +52,12 @@ function ManageCategories() {
 
         try {
             if (editingCategoryId) {
-                const res = await axios.put(`/categories/${editingCategoryId}`, { name });
+                const res = await axiosInstance.put(`/categories/${editingCategoryId}`, { name });
                 setCategories(categories.map((cat) => (cat.id === editingCategoryId ? res.data : cat)));
                 toast.success('Category updated successfully!');
                 setEditingCategoryId(null);
             } else {
-                const res = await axios.post('/categories', { name });
+                const res = await axiosInstance.post('/categories', { name });
                 setCategories([...categories, res.data]);
                 toast.success('Category added successfully!');
             }
@@ -87,7 +87,7 @@ function ManageCategories() {
 
     const confirmDelete = async () => {
         try {
-            const res = await axios.delete(`/categories/${categoryToDelete.id}`);
+            const res = await axiosInstance.delete(`/categories/${categoryToDelete.id}`);
             setCategories(categories.filter((cat) => cat.id !== categoryToDelete.id));
             // Dispatch deleteGame for each deleted game
             if (res.data.deletedGameIds && res.data.deletedGameIds.length > 0) {
