@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import axiosInstance from '../utils/axiosConfig';
+import axiosInstance from '../config/axiosConfig';
+import { buildAssetUrl } from '../utils/url';
 import Modal from 'react-modal';
 import { toast } from 'react-toastify';
 
@@ -25,7 +26,7 @@ function ManageUsers() {
     }, [user, navigate]);
 
     useEffect(() => {
-        axiosInstance.get('http://localhost:8080/users')
+        axiosInstance.get('/users')
             .then((res) => {
                 const filteredUsers = res.data.filter((u) => u.id !== user.id);
                 setUsers(filteredUsers);
@@ -38,7 +39,7 @@ function ManageUsers() {
 
     async function handleDelete() {
         try {
-            await axiosInstance.delete(`http://localhost:8080/users/${userToDelete.id}`);
+            await axiosInstance.delete(`/users/${userToDelete.id}`);
             setUsers(users.filter((u) => u.id !== userToDelete.id));
             toast.success('User deleted successfully!');
         } catch (error) {
@@ -50,7 +51,7 @@ function ManageUsers() {
 
     async function handleBan(userId) {
         try {
-            const res = await axiosInstance.post(`http://localhost:8080/users/${userId}/ban`);
+            const res = await axiosInstance.post(`/users/${userId}/ban`);
             setUsers(users.map((u) => (u.id === userId ? res.data.user : u)));
             toast.success('User banned successfully!');
         } catch (error) {
@@ -61,7 +62,7 @@ function ManageUsers() {
 
     async function handleUnban(userId) {
         try {
-            const res = await axiosInstance.post(`http://localhost:8080/users/${userId}/unban`);
+            const res = await axiosInstance.post(`/users/${userId}/unban`);
             setUsers(users.map((u) => (u.id === userId ? res.data.user : u)));
             toast.success('User unbanned successfully!');
         } catch (error) {
@@ -78,7 +79,7 @@ function ManageUsers() {
         try {
             const formData = new FormData();
             formData.append('role', newRole);
-            const res = await axiosInstance.put(`http://localhost:8080/users/${userToUpdateRole.id}`, formData, {
+            const res = await axiosInstance.put(`/users/${userToUpdateRole.id}`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
             setUsers(users.map((u) => (u.id === userToUpdateRole.id ? res.data : u)));
@@ -122,7 +123,7 @@ function ManageUsers() {
                                     <div className="flex items-center space-x-4">
                                         {u.avatar ? (
                                             <img
-                                                src={`http://localhost:8080/${u.avatar}`}
+                                                src={buildAssetUrl(u.avatar)}
                                                 alt={u.name}
                                                 className="w-10 h-10 rounded-full border border-green-500 object-cover"
                                             />

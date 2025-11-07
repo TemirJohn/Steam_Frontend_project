@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { login } from '../redux/authReducer';
-import axiosInstance from '../utils/axiosConfig';
+import axiosInstance from '../config/axiosConfig';
 import { toast } from 'react-toastify';
 
 function Login() {

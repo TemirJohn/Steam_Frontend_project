@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import axiosInstance from '../utils/axiosConfig';
+import axiosInstance from '../config/axiosConfig';
 import Modal from 'react-modal';
 import { toast } from 'react-toastify';
 import { deleteGame } from '../redux/gameReducer';
@@ -30,7 +30,7 @@ function ManageCategories() {
 
     const fetchCategories = async () => {
         try {
-            const res = await axiosInstance.get('http://localhost:8080/categories');
+            const res = await axiosInstance.get('/categories');
             setCategories(res.data);
         } catch (err) {
             console.error('Error fetching categories:', err);

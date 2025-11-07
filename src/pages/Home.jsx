@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useSearchParams } from 'react-router-dom';
-import axiosInstance from '../utils/axiosConfig';
+import axiosInstance from '../config/axiosConfig';
 import GameCard from '../components/GameCard';
 import { toast } from 'react-toastify';
 

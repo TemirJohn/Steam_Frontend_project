@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import axiosInstance from '../utils/axiosConfig';
+import axiosInstance from '../config/axiosConfig';
+import { buildAssetUrl } from '../utils/url';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { setUser } from '../redux/authReducer';
@@ -66,7 +67,7 @@ function Profile() {
                     <h1 className="text-4xl font-bold text-purple-600 mb-4">Profile</h1>
                     {user.avatar ? (
                         <img
-                            src={`http://localhost:8080/${user.avatar}`}
+                            src={buildAssetUrl(user.avatar)}
                             alt="Avatar"
                             className="w-28 h-28 rounded-full object-cover border-4 border-purple-500"
                             onError={(e) => console.error('Failed to load avatar:', e)}
@@ -104,7 +105,7 @@ function Profile() {
                                 <Link key={game.id} to={`/games/${game.id}`} className="block">
                                     <div className="bg-gray-700 hover:bg-gray-600 p-4 rounded-xl shadow-lg transition-all">
                                         <img
-                                            src={`http://localhost:8080/${game.image}`}
+                                            src={buildAssetUrl(game.image)}
                                             alt={game.name}
                                             className="w-full h-40 object-cover rounded mb-3"
                                         />

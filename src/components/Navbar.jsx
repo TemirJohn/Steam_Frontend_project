@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../redux/authReducer';
+import { buildAssetUrl } from '../utils/url';
 
 function Navbar() {
     const user = useSelector((state) => state.auth.user);
@@ -42,7 +43,7 @@ function Navbar() {
                             className="flex items-center space-x-2 bg-gray-700 px-4 py-2 rounded hover:bg-gray-600 transition"
                         >
                             <img
-                                src={`http://localhost:8080/${user.avatar}`}
+                                src={buildAssetUrl(user.avatar)}
                                 className="w-10 h-10 rounded-full mr-4 object-cover"
                             />
                             <span className="hidden md:inline">{user.name}</span>

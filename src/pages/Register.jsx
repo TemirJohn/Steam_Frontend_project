@@ -1,8 +1,6 @@
-// ============ Register.jsx ============
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from '../utils/axiosConfig'; // ✅ Используем настроенный axios
-import { API_ENDPOINTS } from '../config/api'; // ДОБАВЛЕНО
+import axiosInstance from '../config/axiosConfig';
 import { toast } from 'react-toastify';
 
 function Register() {
@@ -25,7 +23,7 @@ function Register() {
         }
 
         try {
-            const response = await axios.post(API_ENDPOINTS.REGISTER, formData, {
+            const response = await axiosInstance.post('/users', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
             toast.success('Registered successfully! Please log in.');

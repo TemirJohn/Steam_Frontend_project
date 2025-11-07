@@ -4,7 +4,7 @@ import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import { store, persistor } from './redux/store';
 import { useEffect } from 'react';
-import { fetchCSRFToken } from './config/axios'; 
+import { fetchCSRFToken } from './config/axiosConfig'; 
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import GameDetail from './pages/GameDetail';

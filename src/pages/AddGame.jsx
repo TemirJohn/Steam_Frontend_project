@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import axiosInstance from '../utils/axiosConfig';
+import axiosInstance from '../config/axiosConfig';
 import { addGame } from '../redux/gameReducer';
 import { toast } from 'react-toastify';
 
@@ -23,7 +23,7 @@ function AddGame() {
             return;
         }
 
-        axiosInstance.get('http://localhost:8080/categories')
+        axiosInstance.get('/categories')
             .then((res) => setCategories(res.data))
             .catch((err) => {
                 console.error('Error fetching categories:', err);

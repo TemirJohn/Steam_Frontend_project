@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import axiosInstance from '../utils/axiosConfig';
+import axiosInstance from '../config/axiosConfig';
+import { buildAssetUrl } from '../utils/url';
 import ReviewForm from '../components/ReviewForm';
 import { toast } from 'react-toastify';
 
@@ -93,7 +94,7 @@ function GameDetail() {
 
                         <div className="mt-8 p-6 rounded-lg bg-gray-800 bg-opacity-95 text-white shadow-lg mb-8">
                             <img
-                                src={`http://localhost:8080/${game.image}`}
+                                src={buildAssetUrl(game.image)}
                                 alt={game.name}
                                 className="w-full h-64 object-cover rounded-lg mb-6"
                                 loading="lazy"
@@ -136,7 +137,7 @@ function GameDetail() {
                                         <div key={review.id} className="bg-gray-700 p-4 rounded-lg mb-2 flex items-start">
                                             {review.user?.avatar ? (
                                                 <img
-                                                    src={`http://localhost:8080/${review.user.avatar}`}
+                                                    src={buildAssetUrl(review.user.avatar)}
                                                     alt={review.user.name || 'User'}
                                                     width="40"
                                                     height="40"

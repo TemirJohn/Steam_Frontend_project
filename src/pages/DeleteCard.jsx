@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { deleteGame } from '../redux/gameReducer';
-import axiosInstance from '../utils/axiosConfig';
+import axiosInstance from '../config/axiosConfig';
 import Modal from 'react-modal';
 import { toast } from 'react-toastify';
 
