@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
-import axios from '../utils/axiosConfig';
+import axiosInstance from '../config/axiosConfig';
 import { toast } from 'react-toastify';
 
 function ReviewForm({ gameId, onReviewAdded }) {
@@ -23,7 +23,7 @@ function ReviewForm({ gameId, onReviewAdded }) {
         const review = { gameId, rating, comment };
 
         try {
-            await axios.post('/reviews', review);
+            await axiosInstance.post('/reviews', review);
             toast.success('Review submitted successfully!');
             onReviewAdded();
             setRating(5);

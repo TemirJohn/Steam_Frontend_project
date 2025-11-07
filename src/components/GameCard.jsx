@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { buildAssetUrl } from '../utils/url';
 
 function GameCard({ game }) {
     const user = useSelector((state) => state.auth.user);
@@ -10,7 +11,7 @@ function GameCard({ game }) {
     return (
         <div className="bg-gray-800 bg-opacity-90 rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
             <img
-                src={`http://localhost:8080/${game.image}`}
+                src={buildAssetUrl(game.image)}
                 alt={game.name}
                 className="w-full h-48 object-cover"
             />

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { login } from '../redux/authReducer';
-import axios from 'axios';
+import axiosInstance from '../config/axiosConfig';
 import { toast } from 'react-toastify';
 
 function Login() {
@@ -14,7 +14,7 @@ function Login() {
     async function handleLogin(e) {
         e.preventDefault();
         try {
-            const response = await axios.post('http://localhost:8080/login', { email, password });
+            const response = await axiosInstance.post('/login', { email, password });
             localStorage.setItem('token', response.data.token);
             localStorage.setItem('user', JSON.stringify(response.data.user));
             dispatch(login(response.data.user));
@@ -22,8 +22,21 @@ function Login() {
             navigate('/');
         } catch (error) {
             console.error('Login error:', error);
-            const errorMessage = error.response?.data?.error || 'Login failed';
-            toast.error(errorMessage);
+            
+            // ОБНОВЛЕНО: Обработка ошибок валидации
+            const errorData = error.response?.data;
+            
+            if (errorData?.errors) {
+                // Множественные ошибки валидации
+                Object.values(errorData.errors).forEach(err => {
+                    toast.error(err);
+                });
+            } else if (errorData?.error) {
+                // Единичная ошибка
+                toast.error(errorData.error);
+            } else {
+                toast.error('Login failed');
+            }
         }
     }
 

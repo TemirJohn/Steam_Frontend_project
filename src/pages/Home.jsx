@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useSearchParams } from 'react-router-dom';
-import axios from '../utils/axiosConfig';
+import axiosInstance from '../config/axiosConfig';
 import GameCard from '../components/GameCard';
 import { toast } from 'react-toastify';
 
@@ -14,14 +14,14 @@ function Home() {
     const categoryFilter = searchParams.get('category') || 'all';
 
     useEffect(() => {
-        axios.get(`/games?categoryId=${categoryFilter === 'all' ? '' : categoryFilter}`)
+        axiosInstance.get(`/games?categoryId=${categoryFilter === 'all' ? '' : categoryFilter}`)
             .then((res) => setGames(res.data))
             .catch((err) => {
                 console.error('Error fetching games:', err);
                 toast.error('Failed to load games');
             });
         if (user) {
-            axios.get('/library')
+            axiosInstance.get('/library')
                 .then((res) => setOwnedGames(res.data))
                 .catch((err) => {
                     console.error('Error fetching library:', err);
@@ -31,7 +31,7 @@ function Home() {
     }, [user, categoryFilter]);
 
     useEffect(() => {
-        axios.get('/categories')
+        axiosInstance.get('/categories')
             .then((res) => setCategories(res.data))
             .catch((err) => {
                 console.error('Error fetching categories:', err);
