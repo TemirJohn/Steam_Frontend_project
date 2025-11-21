@@ -19,6 +19,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Profile from "./pages/Profile";
 import ManageCategories from "./pages/ManageCategories";
+import GameDetailAdvanced from './pages/GameDetailAdvanced';
 
 function ProtectedRoute({ children, allowedRoles }) {
     const user = useSelector((state) => state.auth.user);
@@ -55,8 +56,17 @@ function App() {
                         <Route path="/login" element={<Login />} />
                         <Route path="/register" element={<Register />} />
                         <Route path="/" element={<Home />} />
-                        {/* <Route path="/games" element={<Games />} /> */}
                         <Route path="/games/:id" element={<GameDetail />} />
+                        
+                        <Route 
+                            path="/games/:id/advanced" 
+                            element={
+                                <ProtectedRoute>
+                                    <GameDetailAdvanced />
+                                </ProtectedRoute>
+                            } 
+                        />
+                        
                         <Route
                             path="/add-game"
                             element={

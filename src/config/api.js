@@ -14,6 +14,14 @@ export const API_ENDPOINTS = {
     LIBRARY: `${API_BASE_URL}/library`,
     OWNERSHIP: `${API_BASE_URL}/ownership`,
     USERS: `${API_BASE_URL}/users`,
+
+    // 🆕 CONCURRENT ENDPOINTS
+    GAMES_DETAILS: (id) => `${API_BASE_URL}/games/${id}/details`,
+    LIBRARY_DETAILED: `${API_BASE_URL}/library/detailed`,
+    SEARCH_ADVANCED: `${API_BASE_URL}/games/search/advanced`,
+    DASHBOARD_STATS: `${API_BASE_URL}/admin/dashboard/stats`,
+    BULK_UPDATE_PRICES: `${API_BASE_URL}/admin/games/bulk-update-prices`,
+    VALIDATE_GAMES: `${API_BASE_URL}/admin/games/validate-all`,
 };
 
 console.log('🌐 API Base URL:', API_BASE_URL);

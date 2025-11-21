@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux';
 import { useSearchParams } from 'react-router-dom';
 import axiosInstance from '../config/axiosConfig';
 import GameCard from '../components/GameCard';
+import SearchBar from '../components/SearchBar';
 import { toast } from 'react-toastify';
 
 function Home() {
@@ -18,7 +19,6 @@ function Home() {
             .then((res) => setGames(res.data))
             .catch((err) => {
                 console.error('Error fetching games:', err);
-                toast.error('Failed to load games');
             });
         if (user) {
             axiosInstance.get('/library')
@@ -50,7 +50,13 @@ function Home() {
                 {/* Welcome Container */}
                 <div className="max-w-3xl mx-auto mb-10 p-8 bg-gray-800 bg-opacity-90 text-white rounded-xl shadow-xl text-center">
                     <h1 className="text-4xl font-bold text-purple-400 mb-4">Welcome to SteamLite</h1>
+                    <p className="text-gray-300">
+                        Discover amazing games with our advanced parallel search
+                    </p>
                 </div>
+
+                {/* Search Bar with Parallel Processing */}
+                <SearchBar />
 
                 {/* Category Filters */}
                 <div className="mb-8 flex flex-wrap justify-center gap-3">
@@ -81,6 +87,12 @@ function Home() {
                         <GameCard key={game.id} game={game} />
                     ))}
                 </div>
+
+                {games.length === 0 && (
+                    <div className="text-center text-gray-400 py-12">
+                        <p className="text-xl">No games found in this category</p>
+                    </div>
+                )}
             </main>
         </div>
     );

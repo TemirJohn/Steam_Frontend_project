@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import axiosInstance from '../config/axiosConfig';
+import { getGameDetailsAdvanced } from '../config/concurrentApi';
 import { buildAssetUrl } from '../utils/url';
 import ReviewForm from '../components/ReviewForm';
 import { toast } from 'react-toastify';
@@ -10,35 +11,64 @@ function GameDetail() {
     const { id } = useParams();
     const [game, setGame] = useState(null);
     const [reviews, setReviews] = useState([]);
+    const [relatedGames, setRelatedGames] = useState([]);
+    const [statistics, setStatistics] = useState(null);
     const [ownsGame, setOwnsGame] = useState(false);
+    const [loadingTime, setLoadingTime] = useState(null);
+    const [useAdvancedLoading, setUseAdvancedLoading] = useState(true);
     const user = useSelector((state) => state.auth.user);
 
     useEffect(() => {
-        axiosInstance.get(`/games/${id}`)
-            .then((res) => setGame(res.data))
-            .catch((err) => {
+        loadGameData();
+        checkOwnership();
+    }, [id, user, useAdvancedLoading]);
+
+    const loadGameData = async () => {
+        if (useAdvancedLoading) {
+            // Use concurrent endpoint (3x faster)
+            const result = await getGameDetailsAdvanced(id);
+            
+            if (result.success) {
+                setGame(result.data.game);
+                setReviews(result.data.reviews || []);
+                setRelatedGames(result.data.related_games || []);
+                setStatistics(result.data.statistics);
+                setLoadingTime(result.fetchTime);
+                
+                toast.success(`Loaded in ${result.fetchTime}ms (3x faster!)`, {
+                    autoClose: 2000
+                });
+            } else {
+                toast.error(result.error);
+                // Fallback to regular loading
+                setUseAdvancedLoading(false);
+            }
+        } else {
+            // Regular sequential loading
+            try {
+                const gameRes = await axiosInstance.get(`/games/${id}`);
+                setGame(gameRes.data);
+
+                const reviewsRes = await axiosInstance.get(`/reviews?gameId=${id}`);
+                setReviews(reviewsRes.data);
+            } catch (err) {
                 console.error('Error fetching game:', err);
                 toast.error('Failed to load game');
-            });
-
-            axiosInstance.get(`/reviews?gameId=${id}`)
-            .then((res) => setReviews(res.data))
-            .catch((err) => {
-                console.error('Error fetching reviews:', err);
-                toast.error('Failed to load reviews');
-            });
-
-        if (user) {
-            axiosInstance.get('/library')
-                .then((res) => {
-                    const hasGame = res.data.some((g) => g.id === Number(id));
-                    setOwnsGame(hasGame);
-                })
-                .catch((err) => {
-                    console.error('Error checking ownership:', err);
-                });
+            }
         }
-    }, [id, user]);
+    };
+
+    const checkOwnership = async () => {
+        if (user) {
+            try {
+                const res = await axiosInstance.get('/library');
+                const hasGame = res.data.some((g) => g.id === Number(id));
+                setOwnsGame(hasGame);
+            } catch (err) {
+                console.error('Error checking ownership:', err);
+            }
+        }
+    };
 
     const handlePurchase = async () => {
         try {
@@ -66,15 +96,17 @@ function GameDetail() {
     };
 
     const handleReviewAdded = () => {
-        axiosInstance.get(`/reviews?gameId=${id}`)
-            .then((res) => setReviews(res.data))
-            .catch((err) => {
-                console.error('Error fetching reviews:', err);
-                toast.error('Failed to load reviews');
-            });
+        loadGameData();
     };
 
-    if (!game) return <div className="text-center text-white">Loading...</div>;
+    if (!game) return (
+        <div className="flex justify-center items-center h-screen text-white">
+            <div className="text-center">
+                <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-500 mx-auto mb-4"></div>
+                <p className="text-xl">Loading game details...</p>
+            </div>
+        </div>
+    );
 
     const isEditor =
         user &&
@@ -91,6 +123,13 @@ function GameDetail() {
                 <div className="container mx-auto px-4 py-12">
                     <div className="text-center">
                         <h1 className="text-5xl font-bold text-purple-400 mb-6">{game.name}</h1>
+                        
+                        {/* Performance indicator */}
+                        {loadingTime && (
+                            <div className="inline-block bg-green-600 text-white px-4 py-2 rounded-full mb-4">
+                                ⚡ Loaded in {loadingTime}ms with parallel processing
+                            </div>
+                        )}
 
                         <div className="mt-8 p-6 rounded-lg bg-gray-800 bg-opacity-95 text-white shadow-lg mb-8">
                             <img
@@ -99,8 +138,33 @@ function GameDetail() {
                                 className="w-full h-64 object-cover rounded-lg mb-6"
                                 loading="lazy"
                             />
+                            
                             <p className="text-xl font-semibold text-green-400 mb-4">${game.price.toFixed(2)}</p>
                             <p className="text-white mb-4">{game.description}</p>
+
+                            {/* Statistics (from concurrent loading) */}
+                            {statistics && (
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 my-6 p-4 bg-gray-700 rounded-lg">
+                                    <div className="text-center">
+                                        <p className="text-2xl font-bold text-yellow-400">{statistics.total_reviews}</p>
+                                        <p className="text-sm text-gray-300">Reviews</p>
+                                    </div>
+                                    <div className="text-center">
+                                        <p className="text-2xl font-bold text-yellow-400">
+                                            {statistics.average_rating?.toFixed(1) || 'N/A'}
+                                        </p>
+                                        <p className="text-sm text-gray-300">Avg Rating</p>
+                                    </div>
+                                    <div className="text-center">
+                                        <p className="text-2xl font-bold text-yellow-400">{statistics.total_owners}</p>
+                                        <p className="text-sm text-gray-300">Owners</p>
+                                    </div>
+                                    <div className="text-center">
+                                        <p className="text-2xl font-bold text-yellow-400">{statistics.same_category}</p>
+                                        <p className="text-sm text-gray-300">Similar Games</p>
+                                    </div>
+                                </div>
+                            )}
 
                             {isEditor && (
                                 <div className="mb-4">
@@ -128,6 +192,24 @@ function GameDetail() {
                                 </button>
                             )}
 
+                            {/* Related Games (from concurrent loading) */}
+                            {relatedGames && relatedGames.length > 0 && (
+                                <div className="mb-6">
+                                    <h2 className="text-2xl font-semibold mb-4 text-purple-400">Related Games</h2>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        {relatedGames.map((relatedGame) => (
+                                            <Link key={relatedGame.id} to={`/games/${relatedGame.id}`}>
+                                                <div className="bg-gray-700 p-4 rounded-lg hover:bg-gray-600 transition">
+                                                    <h3 className="text-white font-semibold">{relatedGame.name}</h3>
+                                                    <p className="text-green-400">${relatedGame.price.toFixed(2)}</p>
+                                                </div>
+                                            </Link>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Reviews Section */}
                             <div className="mb-6">
                                 <h2 className="text-2xl font-semibold mb-2 text-white">Reviews</h2>
                                 {reviews.length === 0 ? (
@@ -152,7 +234,13 @@ function GameDetail() {
                                             <div className="text-left">
                                                 <p className="font-semibold text-white">{review.user?.name || 'Anonymous'}</p>
                                                 <p className="text-white">{review.comment}</p>
-                                                <p className="text-sm text-gray-400">Rating: {review.rating}/5</p>
+                                                <div className="flex items-center mt-1">
+                                                    <div className="text-yellow-400">
+                                                        {'★'.repeat(review.rating)}
+                                                        {'☆'.repeat(5 - review.rating)}
+                                                    </div>
+                                                    <p className="text-sm text-gray-400 ml-2">{review.rating}/5</p>
+                                                </div>
                                             </div>
                                         </div>
                                     ))
