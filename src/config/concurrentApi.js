@@ -78,7 +78,7 @@ export const getLibraryDetailed = async () => {
  */
 export const getDashboardStatistics = async () => {
     try {
-        const response = await axiosInstance.get('/admin/dashboard/stats');
+        const response = await axiosInstance.get('/dashboard/stats');
         return {
             success: true,
             statistics: response.data.statistics,
@@ -101,7 +101,7 @@ export const getDashboardStatistics = async () => {
  */
 export const bulkUpdateGamePrices = async (data) => {
     try {
-        const response = await axiosInstance.post('/admin/games/bulk-update-prices', data);
+        const response = await axiosInstance.post('/games/bulk-update-prices', data);
         return {
             success: true,
             totalGames: response.data.total_games,
@@ -125,7 +125,7 @@ export const bulkUpdateGamePrices = async (data) => {
  */
 export const validateAllGames = async () => {
     try {
-        const response = await axiosInstance.post('/admin/games/validate-all');
+        const response = await axiosInstance.post('/games/validate-all');
         return {
             success: true,
             totalGames: response.data.total_games,
