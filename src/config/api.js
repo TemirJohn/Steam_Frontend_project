@@ -1,10 +1,15 @@
-const API_PROTOCOL = process.env.REACT_APP_USE_HTTPS === 'true' ? 'https' : 'http';
-const API_HOST = process.env.REACT_APP_API_HOST || 'localhost';
-const API_PORT = process.env.REACT_APP_API_PORT || '3000';
+// src/config/api.js
 
-export const API_BASE_URL = `${API_PROTOCOL}://${API_HOST}:${API_PORT}`;
+// Определяем, запущены ли мы локально (npm start)
+const isDevelopment = process.env.NODE_ENV === 'development';
 
-// For convenience
+// Если разработка -> идем напрямую на бэкенд (8080)
+// Если продакшен (Docker/Nginx) -> идем через относительный путь /api
+export const API_BASE_URL = isDevelopment 
+    ? 'https://localhost:8080' 
+    : '/api';
+
+// Остальной код остается без изменений
 export const API_ENDPOINTS = {
     LOGIN: `${API_BASE_URL}/login`,
     REGISTER: `${API_BASE_URL}/users`,
@@ -15,7 +20,7 @@ export const API_ENDPOINTS = {
     OWNERSHIP: `${API_BASE_URL}/ownership`,
     USERS: `${API_BASE_URL}/users`,
 
-    // 🆕 CONCURRENT ENDPOINTS
+    // CONCURRENT ENDPOINTS
     GAMES_DETAILS: (id) => `${API_BASE_URL}/games/${id}/details`,
     LIBRARY_DETAILED: `${API_BASE_URL}/library/detailed`,
     SEARCH_ADVANCED: `${API_BASE_URL}/games/search/advanced`,
@@ -25,3 +30,4 @@ export const API_ENDPOINTS = {
 };
 
 console.log('🌐 API Base URL:', API_BASE_URL);
+console.log('🔧 Environment:', process.env.NODE_ENV);
