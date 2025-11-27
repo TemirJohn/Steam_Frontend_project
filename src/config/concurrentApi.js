@@ -93,31 +93,6 @@ export const getDashboardStatistics = async () => {
     }
 };
 
-// ==================== ADMIN: BULK OPERATIONS ====================
-
-/**
- * Bulk update game prices using worker pool
- * 10x faster for large batches
- */
-export const bulkUpdateGamePrices = async (data) => {
-    try {
-        const response = await axiosInstance.post('/games/bulk-update-prices', data);
-        return {
-            success: true,
-            totalGames: response.data.total_games,
-            successful: response.data.successful,
-            failed: response.data.failed,
-            processingTime: response.data.processing_time,
-            results: response.data.results
-        };
-    } catch (error) {
-        console.error('Error bulk updating prices:', error);
-        return {
-            success: false,
-            error: error.response?.data?.error || 'Bulk update failed'
-        };
-    }
-};
 
 /**
  * Validate all games concurrently

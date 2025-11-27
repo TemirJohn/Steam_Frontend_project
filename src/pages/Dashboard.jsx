@@ -1,16 +1,22 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { getDashboardStatistics, validateAllGames, bulkUpdateGamePrices } from '../config/concurrentApi';
+import { getDashboardStatistics, validateAllGames} from '../config/concurrentApi';
 import { toast } from 'react-toastify';
 
 function Dashboard() {
     const user = useSelector((state) => state.auth.user);
+    
+    // Statistics State
     const [stats, setStats] = useState(null);
     const [loadingStats, setLoadingStats] = useState(false);
     const [calculationTime, setCalculationTime] = useState(null);
+    
+    // Validation State
     const [validating, setValidating] = useState(false);
     const [validationResult, setValidationResult] = useState(null);
+
+    
 
     useEffect(() => {
         if (user?.role === 'admin') {
@@ -20,16 +26,18 @@ function Dashboard() {
 
     const loadStatistics = async () => {
         setLoadingStats(true);
-        const result = await getDashboardStatistics();
-        
-        if (result.success) {
-            setStats(result.statistics);
-            setCalculationTime(result.calculationTime);
-            toast.success(`Stats loaded in ${result.calculationTime}`, { autoClose: 2000 });
-        } else {
-            toast.error(result.error);
+        try {
+            const result = await getDashboardStatistics();
+            if (result.success || result.statistics) { // Проверка адаптирована под разные форматы ответа
+                setStats(result.statistics || result); // Иногда API возвращает stats сразу или внутри поля statistics
+                setCalculationTime(result.calculationTime || result.calculation_time);
+                toast.success(`Stats loaded`, { autoClose: 1000 });
+            } else {
+                toast.error(result.error || 'Failed to load stats');
+            }
+        } catch (e) {
+            console.error(e);
         }
-        
         setLoadingStats(false);
     };
 
@@ -41,15 +49,17 @@ function Dashboard() {
         setValidating(true);
         const result = await validateAllGames();
         
-        if (result.success) {
+        if (result.success || result.valid_games !== undefined) {
             setValidationResult(result);
-            toast.success(`Validated ${result.totalGames} games in ${result.validationTime}`);
+            toast.success(`Validated ${result.total_games || result.totalGames} games`);
         } else {
-            toast.error(result.error);
+            toast.error(result.error || 'Validation failed');
         }
         
         setValidating(false);
     };
+
+    
 
     return (
         <div
@@ -90,7 +100,7 @@ function Dashboard() {
 
                                 {calculationTime && (
                                     <div className="mb-4 inline-block bg-green-600 text-white px-4 py-2 rounded-full text-sm">
-                                        ⚡ Calculated in {calculationTime} with parallel processing (4x faster)
+                                        ⚡ Calculated in {calculationTime} with parallel processing
                                     </div>
                                 )}
 
@@ -107,21 +117,21 @@ function Dashboard() {
                                             <p className="text-4xl font-bold text-yellow-400">{stats.total_games}</p>
                                             <p className="text-sm text-gray-300 mt-2">Total Games</p>
                                             <p className="text-xs text-green-400 mt-1">
-                                                {stats.recent_games} new this month
+                                                {stats.recent_games} new
                                             </p>
                                         </div>
                                         <div className="bg-gray-700 p-6 rounded-lg text-center">
                                             <p className="text-4xl font-bold text-yellow-400">{stats.total_reviews}</p>
                                             <p className="text-sm text-gray-300 mt-2">Total Reviews</p>
                                             <p className="text-xs text-green-400 mt-1">
-                                                Avg: {stats.average_rating?.toFixed(1)}/5
+                                                Avg: {stats.average_rating ? Number(stats.average_rating).toFixed(1) : 0}/5
                                             </p>
                                         </div>
                                         <div className="bg-gray-700 p-6 rounded-lg text-center">
                                             <p className="text-4xl font-bold text-yellow-400">{stats.total_sales}</p>
                                             <p className="text-sm text-gray-300 mt-2">Total Sales</p>
                                             <p className="text-xs text-green-400 mt-1">
-                                                Top: {stats.top_category}
+                                                Top: {stats.top_category || 'N/A'}
                                             </p>
                                         </div>
                                     </div>
@@ -141,37 +151,37 @@ function Dashboard() {
                                         <div className="grid grid-cols-3 gap-4 mb-4">
                                             <div className="text-center">
                                                 <p className="text-2xl font-bold text-green-400">
-                                                    {validationResult.validGames}
+                                                    {validationResult.valid_games || validationResult.validGames}
                                                 </p>
                                                 <p className="text-sm text-gray-300">Valid Games</p>
                                             </div>
                                             <div className="text-center">
                                                 <p className="text-2xl font-bold text-red-400">
-                                                    {validationResult.invalidGames}
+                                                    {validationResult.invalid_games || validationResult.invalidGames}
                                                 </p>
                                                 <p className="text-sm text-gray-300">Invalid Games</p>
                                             </div>
                                             <div className="text-center">
                                                 <p className="text-2xl font-bold text-blue-400">
-                                                    {validationResult.validationTime}
+                                                    {validationResult.validation_time || validationResult.validationTime}
                                                 </p>
                                                 <p className="text-sm text-gray-300">Time Taken</p>
                                             </div>
                                         </div>
-                                        {validationResult.invalidDetails?.length > 0 && (
+                                        {(validationResult.invalid_details || validationResult.invalidDetails)?.length > 0 && (
                                             <div>
                                                 <p className="text-sm text-red-400 mb-2">Invalid Games:</p>
                                                 <ul className="text-xs text-gray-300 space-y-1">
-                                                    {validationResult.invalidDetails.map((item) => (
-                                                        <li key={item.game_id}>
-                                                            Game ID {item.game_id}: {item.error}
+                                                    {(validationResult.invalid_details || validationResult.invalidDetails).map((item) => (
+                                                        <li key={item.game_id || item.GameID}>
+                                                            ID {item.game_id || item.GameID}: {item.error || item.Error}
                                                         </li>
                                                     ))}
                                                 </ul>
                                             </div>
                                         )}
                                     </div>
-                                )}
+                                )}                                
                             </div>
                         )}
 
@@ -187,11 +197,6 @@ function Dashboard() {
                                     <Link to="/manage-categories" className="flex-1 sm:flex-none">
                                         <button className="w-full bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg transition-all duration-200">
                                             📂 Manage Categories
-                                        </button>
-                                    </Link>
-                                    <Link to="/admin-tools" className="flex-1 sm:flex-none">
-                                        <button className="w-full bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg transition-all duration-200">
-                                            ⚡ Concurrent Tools
                                         </button>
                                     </Link>
                                     <button

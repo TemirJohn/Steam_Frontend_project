@@ -3,7 +3,6 @@ import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { 
     validateAllGames, 
-    bulkUpdateGamePrices,
     sendGameNotifications,
     processGameImages 
 } from '../config/concurrentApi';
@@ -17,12 +16,6 @@ function AdminTools() {
     const [validating, setValidating] = useState(false);
     const [validationResult, setValidationResult] = useState(null);
     
-    // Bulk update state
-    const [updating, setUpdating] = useState(false);
-    const [categoryId, setCategoryId] = useState('');
-    const [action, setAction] = useState('validate');
-    const [percentage, setPercentage] = useState(90);
-    const [updateResult, setUpdateResult] = useState(null);
     
     // Notification state
     const [notifying, setNotifying] = useState(false);
@@ -59,31 +52,7 @@ function AdminTools() {
         setValidating(false);
     };
 
-    // Bulk update prices
-    const handleBulkUpdate = async (e) => {
-        e.preventDefault();
-        
-        if (!window.confirm(`This will ${action} games. Continue?`)) {
-            return;
-        }
-
-        setUpdating(true);
-        const result = await bulkUpdateGamePrices({
-            category_id: categoryId ? parseInt(categoryId) : null,
-            action: action,
-            percentage: percentage / 100
-        });
-        
-        if (result.success) {
-            setUpdateResult(result);
-            toast.success(`✅ Processed ${result.totalGames} games in ${result.processingTime}`);
-        } else {
-            toast.error(result.error);
-        }
-        
-        setUpdating(false);
-    };
-
+   
     // Send notifications
     const handleNotify = async (e) => {
         e.preventDefault();
@@ -194,92 +163,6 @@ function AdminTools() {
                                         </div>
                                     </div>
                                 )}
-                            </div>
-                        )}
-                    </div>
-
-                    {/* 2. BULK UPDATE PRICES */}
-                    <div className="bg-gray-800 p-6 rounded-xl shadow-lg">
-                        <h2 className="text-2xl font-semibold text-yellow-400 mb-4">
-                            💰 Bulk Update Prices
-                        </h2>
-                        <p className="text-gray-300 mb-4">
-                            Worker pool processes games in parallel. 10x faster for large batches.
-                        </p>
-
-                        <form onSubmit={handleBulkUpdate} className="space-y-3">
-                            <div>
-                                <label className="block text-sm mb-1">Category ID (optional)</label>
-                                <input
-                                    type="number"
-                                    value={categoryId}
-                                    onChange={(e) => setCategoryId(e.target.value)}
-                                    placeholder="Leave empty for all games"
-                                    className="w-full bg-gray-700 p-2 rounded"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm mb-1">Action</label>
-                                <select
-                                    value={action}
-                                    onChange={(e) => setAction(e.target.value)}
-                                    className="w-full bg-gray-700 p-2 rounded"
-                                >
-                                    <option value="validate">Validate</option>
-                                    <option value="update_prices">Update Prices</option>
-                                </select>
-                            </div>
-
-                            {action === 'update_prices' && (
-                                <div>
-                                    <label className="block text-sm mb-1">
-                                        Discount Percentage: {percentage}%
-                                    </label>
-                                    <input
-                                        type="range"
-                                        min="10"
-                                        max="100"
-                                        value={percentage}
-                                        onChange={(e) => setPercentage(e.target.value)}
-                                        className="w-full"
-                                    />
-                                </div>
-                            )}
-
-                            <button
-                                type="submit"
-                                disabled={updating}
-                                className={`w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg transition ${
-                                    updating ? 'opacity-50 cursor-not-allowed' : ''
-                                }`}
-                            >
-                                {updating ? '⏳ Processing...' : '🚀 Start Bulk Operation'}
-                            </button>
-                        </form>
-
-                        {updateResult && (
-                            <div className="mt-4 p-4 bg-gray-700 rounded-lg">
-                                <div className="grid grid-cols-3 gap-4">
-                                    <div className="text-center">
-                                        <p className="text-2xl font-bold text-green-400">
-                                            {updateResult.successful}
-                                        </p>
-                                        <p className="text-xs text-gray-400">Successful</p>
-                                    </div>
-                                    <div className="text-center">
-                                        <p className="text-2xl font-bold text-red-400">
-                                            {updateResult.failed}
-                                        </p>
-                                        <p className="text-xs text-gray-400">Failed</p>
-                                    </div>
-                                    <div className="text-center">
-                                        <p className="text-2xl font-bold text-blue-400">
-                                            {updateResult.processingTime}
-                                        </p>
-                                        <p className="text-xs text-gray-400">Time</p>
-                                    </div>
-                                </div>
                             </div>
                         )}
                     </div>
